@@ -1787,17 +1787,26 @@ $('#add').onclick = () => { if (fanSkipClick) { fanSkipClick = false; return; } 
 let fan = null, fanPress = null, fanSkipClick = false;
 // 音效：App 自己合成，不用音频文件；开关存在这部手机上
 const SFX = (() => {
-  let ctx = null;
+  let ctx = null, out = null;
+  const LOUD = 1.9;   // 整体音量
   const enabled = () => { try { return localStorage.getItem('ledger.sfx') !== '0'; } catch { return true; } };
   const ac = () => {
-    try { if (!ctx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ctx = new C(); } if (ctx.state === 'suspended') ctx.resume(); return ctx; } catch { return null; }
+    try {
+      if (!ctx) {
+        const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ctx = new C();
+        // 压缩一下：声音大了也不会破音
+        out = ctx.createDynamicsCompressor(); out.threshold.value = -10; out.knee.value = 6; out.ratio.value = 4; out.attack.value = 0.002; out.release.value = 0.08;
+        out.connect(ctx.destination);
+      }
+      if (ctx.state === 'suspended') ctx.resume(); return ctx;
+    } catch { return null; }
   };
   const tone = (f0, f1, dur, type, vol, when = 0) => {
     const c = ac(); if (!c) return; const t = c.currentTime + when;
     const o = c.createOscillator(), g = c.createGain();
     o.type = type; o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.03);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.min(0.85, vol * LOUD), t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(out || c.destination); o.start(t); o.stop(t + dur + 0.03);
   };
   return {
     get on() { return enabled(); },
@@ -2058,7 +2067,7 @@ $('#toast').addEventListener('click', e => {
 });
 
 /* ---------- boot ---------- */
-const APP_VER = '2026-11-18k';
+const APP_VER = '2026-11-18l';
 // 新版：先显示手机里存的上次资料（打开快），再到 Google 拿最新的
 function replayOutbox() {
   for (const { fn, args } of store.get('ledger.outbox') || []) {
