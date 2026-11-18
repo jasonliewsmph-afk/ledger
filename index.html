@@ -421,6 +421,9 @@ table.mini.rules td:last-child { font-family: var(--f-body); white-space: normal
 .keypad button:active { transform: scale(.92); }
 #e-amtview { display: inline-block; }
 html, body { overscroll-behavior-x: none; }
+/* 像 App 一样：长按不会选字、不会跳出「复制 / 全选」（输入框除外） */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+input, textarea, select, [contenteditable] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 main { overflow-x: clip; }
 .peek { position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; overflow: hidden; background: var(--bg); pointer-events: none; will-change: transform; }
 #view { will-change: transform; }
@@ -1708,6 +1711,7 @@ const ICO_DEL = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" str
 let lp = null, ctxEat = false;
 function ctxOpen(row) {
   const t = S.txns.get(row.dataset.edit); if (!t) return;
+  try { getSelection().removeAllRanges(); } catch {}
   swipe = null; ctxEat = true; row.classList.remove('pressing');
   const r = row.getBoundingClientRect();
   const clone = row.cloneNode(true); clone.classList.remove('pressing', 'mo-fresh'); clone.classList.add('ctx-row'); clone.removeAttribute('tabindex');
@@ -1750,6 +1754,8 @@ ctxBox.addEventListener('click', e => {
   else { SFX.trash(); ctxClose(() => deleteTxn(id)); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') ctxClose(); });
+document.addEventListener('contextmenu', e => { if (!e.target.closest('input, textarea, select')) e.preventDefault(); });
+document.addEventListener('selectstart', e => { if (!e.target.closest || !e.target.closest('input, textarea, [contenteditable]')) e.preventDefault(); });
 // 页面内的 #页面 链接改成直接切换，不改网址
 document.addEventListener('click', e => {
   const a = e.target.closest('a[href^="#"]'); if (!a) return;
@@ -2067,7 +2073,7 @@ $('#toast').addEventListener('click', e => {
 });
 
 /* ---------- boot ---------- */
-const APP_VER = '2026-11-18m';
+const APP_VER = '2026-11-18n';
 // 新版：先显示手机里存的上次资料（打开快），再到 Google 拿最新的
 function replayOutbox() {
   for (const { fn, args } of store.get('ledger.outbox') || []) {
