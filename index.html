@@ -421,6 +421,9 @@ table.mini.rules td:last-child { font-family: var(--f-body); white-space: normal
 .keypad button:active { transform: scale(.92); }
 #e-amtview { display: inline-block; }
 html, body { overscroll-behavior-x: none; }
+main { overflow-x: clip; }
+.peek { position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; overflow: hidden; background: var(--bg); pointer-events: none; will-change: transform; }
+#view { will-change: transform; }
 .row, .day-item { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; transition: transform .35s ease, background .15s; }
 .row.pressing, .day-item.pressing { transform: scale(.97); }
 .ctx { position: fixed; inset: 0; z-index: 35; background: rgba(8,12,20,.3); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: ctxBg .2s ease-out; }
@@ -1565,8 +1568,8 @@ function moCount(el, from, to, t0) {
   requestAnimationFrame(step);
 }
 function motion(v) {
-  const still = calm(), newTab = MO.tab !== S.tab, first = MO.tab === null, delay = MO.delay;
-  const slide = MO.slide; MO.tab = S.tab; MO.delay = 0; MO.slide = 0;
+  const still = calm() || MO.quiet, newTab = MO.tab !== S.tab, first = MO.tab === null, delay = MO.delay;
+  const slide = MO.slide; MO.tab = S.tab; MO.delay = 0; MO.slide = 0; MO.quiet = false;   // 拖过来的页已经看到了，不要再播进场动画
   if (!still && newTab && !first) v.animate([{ opacity: 0, transform: slide ? `translateX(${slide * 48}px)` : 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: slide ? 240 : 220, easing: EASE });
   const now = performance.now();
   // 还在跑的动画（中途又重画了）就接着跑，不会突然跳到最后
@@ -1640,25 +1643,64 @@ function route() { render(); }
 const SWIPE_TABS = ['home', 'flow', 'budget', 'stats'];
 let swipe = null;
 const sideScroll = el => { for (; el && el !== document.body; el = el.parentElement) { if (el.scrollWidth > el.clientWidth + 2 && /auto|scroll/.test(getComputedStyle(el).overflowX)) return true; } return false; };
+// 跟着手指走：当前页跟手指移动，旁边那页同时滑进来；放手时滑过 1/4 或快速一划就换页，不然弹回去
+const RENDER = { home: () => renderHome(), flow: () => renderFlow(), budget: () => renderBudget(), stats: () => renderStats() };
+const nextTab = dir => { const i = SWIPE_TABS.indexOf(S.tab); return i < 0 ? (dir < 0 ? 'home' : null) : (SWIPE_TABS[i + dir] || null); };
+const peek = $('main').appendChild(Object.assign(document.createElement('div'), { className: 'peek', hidden: true }));
+peek.innerHTML = '<div class="wrap"></div>';
 document.addEventListener('touchstart', e => {
   swipe = null;
-  if (e.touches.length !== 1 || !S.loaded) return;
+  if (e.touches.length !== 1 || !S.loaded || S.dragBusy) return;
   if (!$('#overlay').hidden || !$('#mpick').hidden || !$('#rform').hidden || !$('#stform').hidden || !$('#ctx').hidden || fan) return;
   const t = e.touches[0], el = e.target;
   if (!$('main').contains(el) || el === document.activeElement && el.matches('input, textarea') || el.closest('textarea') || sideScroll(el)) return;
   if (t.clientX < 24 || t.clientX > innerWidth - 24) return;   // 屏幕边缘留给手机自己的返回手势
-  swipe = { x: t.clientX, y: t.clientY, t: Date.now() };
+  swipe = { x: t.clientX, y: t.clientY, lx: t.clientX, lt: Date.now(), vx: 0, dx: 0, mode: null, dir: 0, next: null };
 }, { passive: true });
-document.addEventListener('touchend', e => {
+function dragTo(dx) {
+  const dir = dx < 0 ? 1 : -1;
+  if (dir !== swipe.dir) {
+    swipe.dir = dir; swipe.next = nextTab(dir);
+    if (swipe.next) { peek.style.top = Math.max(0, $('header.top').getBoundingClientRect().bottom) + 'px'; peek.firstChild.innerHTML = RENDER[swipe.next](); peek.hidden = false; }
+    else peek.hidden = true;
+  }
+  swipe.dx = dx;
+  const eff = swipe.next ? dx : dx * 0.28;   // 第一页 / 最后一页：拉不太动
+  $('#view').style.transform = `translateX(${eff}px)`;
+  if (swipe.next) peek.style.transform = `translateX(${eff + dir * innerWidth}px)`;
+}
+document.addEventListener('touchmove', e => {
   if (!swipe) return;
-  const t = e.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y, ms = Date.now() - swipe.t; swipe = null;
-  if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.8 || ms > 800) return;
-  const dir = dx < 0 ? 1 : -1, i = SWIPE_TABS.indexOf(S.tab);
-  const next = i < 0 ? (dir < 0 ? 'home' : null) : SWIPE_TABS[i + dir];
-  if (!next) { if (!calm()) $('#view').animate([{ transform: 'none' }, { transform: `translateX(${-dir * 14}px)` }, { transform: 'none' }], { duration: 260, easing: 'ease-out' }); return; }
-  MO.slide = dir; go(next);
-}, { passive: true });
-document.addEventListener('touchcancel', () => { swipe = null; }, { passive: true });
+  const t = e.touches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
+  if (!swipe.mode) {
+    if (Math.hypot(dx, dy) < 10) return;
+    if (Math.abs(dx) > Math.abs(dy) * 1.2) { swipe.mode = 'h'; lpCancel(); } else { swipe = null; return; }
+  }
+  e.preventDefault();
+  const now = Date.now(); swipe.vx = (t.clientX - swipe.lx) / Math.max(1, now - swipe.lt); swipe.lx = t.clientX; swipe.lt = now;
+  dragTo(dx);
+}, { passive: false });
+function dragEnd() {
+  const sw = swipe; swipe = null;
+  if (!sw || sw.mode !== 'h') return;
+  const W = innerWidth, v = $('#view');
+  const commit = !!sw.next && (Math.abs(sw.dx) > W * 0.25 || (Math.abs(sw.dx) > 50 && Math.abs(sw.vx) > 0.4 && Math.sign(sw.vx) === Math.sign(sw.dx)));
+  const eff = sw.next ? sw.dx : sw.dx * 0.28, to = commit ? -sw.dir * W : 0;
+  const ms = calm() ? 0 : Math.round(Math.min(320, Math.max(160, Math.abs(to - eff) / Math.max(0.9, Math.abs(sw.vx)))));
+  const done = () => {
+    if (commit) { MO.quiet = true; go(sw.next); }
+    v.style.transition = peek.style.transition = 'none'; v.style.transform = ''; peek.style.transform = ''; peek.hidden = true; peek.firstChild.innerHTML = '';
+    S.dragBusy = false;
+  };
+  if (!ms) return done();
+  S.dragBusy = true;
+  const ease = `transform ${ms}ms cubic-bezier(.25,.9,.3,1)`;
+  v.style.transition = ease; v.style.transform = `translateX(${to}px)`;
+  if (sw.next) { peek.style.transition = ease; peek.style.transform = `translateX(${to + sw.dir * W}px)`; }
+  setTimeout(done, ms + 20);
+}
+document.addEventListener('touchend', dragEnd, { passive: true });
+document.addEventListener('touchcancel', dragEnd, { passive: true });
 /* 长按一笔记录：像 iPhone 一样浮起来，下面出小选单（修改 / 删除） */
 const ctxBox = document.body.appendChild(Object.assign(document.createElement('div'), { id: 'ctx', className: 'ctx', hidden: true }));
 const ICO_EDIT = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg>';
@@ -2012,7 +2054,7 @@ $('#toast').addEventListener('click', e => {
 });
 
 /* ---------- boot ---------- */
-const APP_VER = '2026-11-18i';
+const APP_VER = '2026-11-18j';
 // 新版：先显示手机里存的上次资料（打开快），再到 Google 拿最新的
 function replayOutbox() {
   for (const { fn, args } of store.get('ledger.outbox') || []) {
