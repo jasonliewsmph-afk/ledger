@@ -1384,7 +1384,7 @@ function renderSettings() {
   ${recurSettingsHtml()}
   <section class="card"><h2>长按 ＋ 一划记账</h2>
     <label class="chk"><input type="checkbox" id="sfx-on" ${SFX.on ? 'checked' : ''}> 音效</label>
-    <p class="note" style="margin-bottom:0">长按底部的 ＋ 不放，往上划：内圈选账户，外圈选分类，放手就去输入金额。划回中间的 ✕ 放手是取消。音效走手机的媒体音量，静音模式也会响，不想要就关掉。</p>
+    <p class="note" style="margin-bottom:0">长按底部的 ＋ 不放，往上划：内圈选账户，外圈选分类，放手就去输入金额。划回中间的 ✕ 放手是取消。长按一笔记录可以修改或删除。音效走手机的媒体音量，静音模式也会响，不想要就关掉。</p>
   </section>
   <section class="card"><h2>数据</h2>
     <p class="note" style="margin-top:0">共 ${S.txns.size} 笔记录，存在你自己的 Google Sheet。也可以直接在 Sheet 里看和改，回到 App 会自动重新读取。</p>
@@ -1721,6 +1721,7 @@ function ctxOpen(row) {
     <button role="menuitem" data-cx="edit"><span>修改</span>${ICO_EDIT}</button>
     <button role="menuitem" data-cx="del" class="danger"><span>删除</span>${ICO_DEL}</button></div>`;
   ctxBox.prepend(clone); ctxBox.hidden = false;
+  SFX.menu();
   try { navigator.vibrate && navigator.vibrate(12); } catch {}
 }
 function ctxClose(then) {
@@ -1732,6 +1733,7 @@ const lpCancel = () => { if (!lp) return; clearTimeout(lp.t); clearTimeout(lp.p)
 $('#view').addEventListener('pointerdown', e => {
   const row = e.target.closest('[data-edit]'); lpCancel();
   if (!row || e.pointerType === 'mouse' || e.target.closest('button, input, select')) return;
+  SFX.warm();   // iPhone 要在手指按下时先唤醒声音，选单弹出时才有声
   lp = { row, x: e.clientX, y: e.clientY, p: setTimeout(() => row.classList.add('pressing'), 120), t: setTimeout(() => { lp = null; ctxOpen(row); }, 480) };
 });
 $('#view').addEventListener('pointermove', e => { if (lp && Math.hypot(e.clientX - lp.x, e.clientY - lp.y) > 8) lpCancel(); });
@@ -1743,9 +1745,9 @@ document.addEventListener('pointerdown', () => { ctxEat = false; }, true);
 document.addEventListener('click', e => { if (!ctxEat) return; ctxEat = false; if (!e.target.closest('.ctx-menu')) { e.stopPropagation(); e.preventDefault(); } }, true);
 ctxBox.addEventListener('click', e => {
   const b = e.target.closest('[data-cx]'), id = ctxBox.dataset.id;
-  if (!b) return ctxClose();
-  if (b.dataset.cx === 'edit') ctxClose(() => { const t = S.txns.get(id); if (t) openSheet(t); });
-  else ctxClose(() => deleteTxn(id));
+  if (!b) { SFX.off(); return ctxClose(); }
+  if (b.dataset.cx === 'edit') { SFX.tick(); ctxClose(() => { const t = S.txns.get(id); if (t) openSheet(t); }); }
+  else { SFX.trash(); ctxClose(() => deleteTxn(id)); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') ctxClose(); });
 // 页面内的 #页面 链接改成直接切换，不改网址
@@ -1806,6 +1808,8 @@ const SFX = (() => {
     cancel() { if (enabled()) tone(260, 200, 0.07, 'sine', 0.2); },
     done() { if (enabled()) { tone(880, 880, 0.07, 'sine', 0.18); tone(1320, 1320, 0.11, 'sine', 0.18, 0.07); } },
     off() { if (enabled()) tone(300, 160, 0.1, 'sine', 0.14); },
+    menu() { if (enabled()) { tone(520, 980, 0.06, 'sine', 0.24); tone(1200, 1200, 0.03, 'triangle', 0.1, 0.05); } },
+    trash() { if (enabled()) tone(520, 140, 0.16, 'triangle', 0.2); },
   };
 })();
 const fanCats = () => spendCats();
@@ -2054,7 +2058,7 @@ $('#toast').addEventListener('click', e => {
 });
 
 /* ---------- boot ---------- */
-const APP_VER = '2026-11-18j';
+const APP_VER = '2026-11-18k';
 // 新版：先显示手机里存的上次资料（打开快），再到 Google 拿最新的
 function replayOutbox() {
   for (const { fn, args } of store.get('ledger.outbox') || []) {
