@@ -544,7 +544,7 @@ async function webCall(fn, args) {
   if (!CONN) throw new Error('还没连接账本');
   let r;
   try { r = await fetch(CONN.u, { method: 'POST', body: JSON.stringify({ k: CONN.k, fn, args }) }); }
-  catch { const e = new Error('没有网络'); e.offline = true; throw e; }
+  catch { const e = new Error(navigator.onLine === false ? '没有网络' : '连不上 Google 的账本（没有网络，或部署的「谁可以访问」不是「任何人」）'); e.offline = true; throw e; }
   let d = null; try { d = await r.json(); } catch {}
   if (!d) throw new Error(`Google 没有回应（${r.status}）`);
   if (!d.ok) throw new Error(d.error || '出错了');
@@ -2012,7 +2012,7 @@ $('#toast').addEventListener('click', e => {
 });
 
 /* ---------- boot ---------- */
-const APP_VER = '2026-11-18h';
+const APP_VER = '2026-11-18i';
 // 新版：先显示手机里存的上次资料（打开快），再到 Google 拿最新的
 function replayOutbox() {
   for (const { fn, args } of store.get('ledger.outbox') || []) {
