@@ -1,6 +1,6 @@
 {
- "name": "我的账本",
- "short_name": "我的账本",
+ "name": "记账",
+ "short_name": "记账",
  "display": "standalone",
  "background_color": "#f5f7fa",
  "theme_color": "#f5f7fa",
