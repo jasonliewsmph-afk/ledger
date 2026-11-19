@@ -1474,7 +1474,7 @@ function renderSettings() {
       <div style="display:grid;gap:6px;min-width:0">
         <input type="text" id="cat-name-${c.id}" data-catname="${c.id}" value="${esc(c.name)}" aria-label="分类名称">
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding-left:8px">
-          <div class="swatches">${[1,2,3,4,5,6,7,8].map(n => `<button class="sw" style="background:${color(n)}" aria-label="颜色 ${n}" aria-pressed="${c.color === n}" data-catcolor="${c.id}" data-n="${n}"></button>`).join('')}</div>
+          <div class="swatches">${[1,2,3,4,5,6,7,8].map(n => `<button class="sw" style="background:${color(n)}" aria-label="颜色 ${n}" aria-pressed="${c.color === n}" data-catcolor="${c.id}" data-col="${n}"></button>`).join('')}</div>
           <label class="chk"><input type="checkbox" data-catkind="${c.id}" ${c.kind === 'transfer' ? 'checked' : ''}> 不计入收支</label>
           <span class="note">${used.get(c.id) || 0} 笔</span>
         </div>
@@ -1699,7 +1699,7 @@ function motion(v) {
     if (from === to) { MO.run.delete(k); return null; }
     const n = { from, to, t0: now + delay }; MO.run.set(k, n); return n;
   };
-  v.querySelectorAll('[data-n]').forEach(el => {
+  v.querySelectorAll('[data-n][data-v]').forEach(el => {   // 只有金额数字（有 data-v）才滚动
     const r = go('n:' + el.dataset.n, +el.dataset.v);
     if (!still && r) moCount(el, r.from, r.to, r.t0);
   });
@@ -2132,7 +2132,7 @@ $('#view').addEventListener('click', async e => {
   if (b.dataset.statview) { S.statView = b.dataset.statview; render(); window.scrollTo(0, 0); return; }
   if (b.dataset.gomonth) { S.month = b.dataset.gomonth; S.statView = 'month'; render(); window.scrollTo(0, 0); return; }
   if (b.dataset.day) { S.statDay = b.dataset.day; render(); return; }
-  if (b.dataset.catcolor) { saveSettings({ ...s, cats: s.cats.map(c => c.id === b.dataset.catcolor ? { ...c, color: +b.dataset.n } : c) }); return; }
+  if (b.dataset.catcolor) { saveSettings({ ...s, cats: s.cats.map(c => c.id === b.dataset.catcolor ? { ...c, color: +b.dataset.col } : c) }); return; }
   if (b.dataset.catdel) {
     if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = '确定删除？'; setTimeout(() => { b.classList.remove('arm'); b.textContent = '删除'; }, 3000); return; }
     const id = b.dataset.catdel;
@@ -2265,7 +2265,7 @@ guideBox.addEventListener('click', e => {
 });
 
 /* ---------- boot ---------- */
-const APP_VER = '2026-11-19d';
+const APP_VER = '2026-11-19e';
 // 新版：先显示手机里存的上次资料（打开快），再到 Google 拿最新的
 function replayOutbox() {
   for (const { fn, args } of store.get('ledger.outbox') || []) {
