@@ -4,7 +4,7 @@
 <base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f5f7fa">
+<meta name="theme-color" content="#f7f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -15,36 +15,59 @@
 <title>记账</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<script>
+(function () { try {
+  var m = localStorage.getItem('ledger.theme') || 'auto', q = window.matchMedia && matchMedia('(prefers-color-scheme: dark)');
+  var t = m === 'auto' ? (q && q.matches ? 'dark' : 'light') : m; document.documentElement.dataset.theme = t;
+} catch (e) {} })();
+</script>
 <style>
 /* Layout: light card ledger. Single column (max 640px), month header, four views, fixed bottom nav with a raised add button. */
 :root {
-  --bg: #f5f7fa;
+  --bg: #f7f4f0;
   --surface: #ffffff;
-  --hero: #fff3ef;
-  --hero-line: #f6d6cc;
-  --hero-ink: #101828;
-  --hero-sub: #5d6679;
-  --ink: #101828;
-  --ink-2: #475467;
-  --muted: #667085;
-  --line: #e4e7ec;
-  --line-soft: #eef0f3;
-  --accent: #d1452b;
+  --hero: #fbf4ec;
+  --hero-line: #ecdcc9;
+  --hero-ink: #231b14;
+  --hero-sub: #7a6a5b;
+  --ink: #231b14;
+  --ink-2: #5b4d41;
+  --muted: #85766a;
+  --line: #e9e1d8;
+  --line-soft: #f1ebe4;
+  --accent: #9c6b43;
   --on-accent: #ffffff;
-  --in: #067647;
-  --danger: #c4320a;
-  --hero-danger: #c4320a;
-  --warn-bg: #fef0c7;
-  --warn-ink: #7a4b00;
-  --track: #eaecf0;
+  --in: #2f7d4f;
+  --danger: #c8372a;
+  --hero-danger: #c8372a;
+  --warn-bg: #fbf0d9;
+  --warn-ink: #7a5200;
+  --warn-line: #f0d79a;
+  --track: #ece5dd;
+  --key-bg: #f3eee8; --key-line: #e2d8cc; --key-ink: #231b14; --key-active: #e6ddd2;
+  --op-bg: #f7ece0; --op-line: #e6cfb6; --op-ink: #8a5a33; --op-active: #efdcc6;
+  --ok-bg: #e6f4ea; --ok-ink: #0b5b2e;
+  --urgent-bg: #fdecea; --urgent-line: #f5b5ad; --urgent-ink: #9b1c0e;
+  --fresh: #f7e9d6; --menu-bg: rgba(252,250,247,.96);
   --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100;
   --c5: #e87ba4; --c6: #008300; --c7: #6250d6; --c8: #e34948;
   --f-num: "Outfit", "Noto Sans SC", system-ui, sans-serif;
   --f-body: "Noto Sans SC", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
   --nav-h: 68px;
 }
-/* Light only, by choice: the page stays light even when the phone is in dark mode. */
+/* 浅色 / 深色：设置里可以选「跟随手机 / 浅色 / 深色」 */
 :root { color-scheme: light; }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141110; --surface: #1e1a17; --hero: #261f19; --hero-line: #3a2f26; --hero-ink: #f2ebe3; --hero-sub: #b2a394;
+  --ink: #f2ebe3; --ink-2: #cdbfb1; --muted: #9a8b7d; --line: #332b25; --line-soft: #29231e;
+  --accent: #c99568; --on-accent: #1a120b; --in: #57c38a; --danger: #ff6f5e; --hero-danger: #ff7b6b;
+  --warn-bg: #3a2d12; --warn-ink: #f3cf7c; --warn-line: #5a4518; --track: #2f2823;
+  --key-bg: #2a2420; --key-line: #3a322b; --key-ink: #f2ebe3; --key-active: #3a322b;
+  --op-bg: #33271d; --op-line: #4a3828; --op-ink: #e0b48b; --op-active: #42321f;
+  --ok-bg: #17361f; --ok-ink: #8fe0a9; --urgent-bg: #3b1a16; --urgent-line: #6b2a22; --urgent-ink: #ffb3a8;
+  --fresh: #3a2e1f; --menu-bg: rgba(44,38,33,.96);
+}
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
@@ -67,7 +90,7 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .month button:hover { background: var(--line-soft); }
 .month button:disabled { opacity: .3; cursor: default; background: none; }
 .month .m-title { width: auto; height: auto; padding: 4px 8px; margin: 0 2px; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); display: flex; align-items: center; gap: 4px; }
-.m-title .caret { font-size: .7rem; color: var(--muted); }
+.m-title .caret { font-size: .72rem; color: var(--muted); }
 .mp-year { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; text-align: center; }
 .mp-year b { font-size: 1.1rem; }
 .mp-year button { width: 44px; height: 44px; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; font-size: 1.2rem; }
@@ -75,34 +98,34 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .mp-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .mp-grid button { height: 54px; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; font-size: 1rem; position: relative; }
 .mp-grid button.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 700; }
-.mp-grid button:disabled { color: #c0c5cd; background: var(--bg); }
+.mp-grid button:disabled { color: var(--line); background: var(--bg); }
 .mp-grid button i { position: absolute; bottom: 7px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--accent); }
 .mp-grid button.on i { background: var(--on-accent); }
 .wallets { display: flex; gap: 14px; }
 .gear { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: var(--ink-2); }
 .gear:hover, .gear[aria-current="page"] { background: var(--line-soft); color: var(--ink); }
 .wallet { display: grid; justify-items: end; line-height: 1.25; }
-.wallet small { color: var(--muted); font-size: .75rem; }
-.wallet b { font-family: var(--f-num); font-weight: 600; font-size: 1.02rem; }
+.wallet small { color: var(--muted); font-size: .8rem; }
+.wallet b { font-family: var(--f-num); font-weight: 600; font-size: 1rem; }
 
 main .wrap { padding-block: 4px calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 28px); display: grid; gap: 16px; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; min-width: 0; }
-.card h2, .sec-h { font-size: .85rem; font-weight: 500; color: var(--muted); margin: 0 0 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.card h2, .sec-h { font-size: .9rem; font-weight: 500; color: var(--muted); margin: 0 0 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .sec-h { margin: 0 2px -8px; }
-.linkish { border: 0; background: none; color: var(--accent); padding: 4px 0; font-weight: 500; font-size: .85rem; text-decoration: none; }
-.note { color: var(--muted); font-size: .85rem; }
+.linkish { border: 0; background: none; color: var(--accent); padding: 4px 0; font-weight: 500; font-size: .9rem; text-decoration: none; }
+.note { color: var(--muted); font-size: .9rem; }
 .status { text-align: center; padding: 48px 12px; color: var(--ink-2); }
 .pos { color: var(--in); }
 .over { color: var(--danger); }
 
 /* hero */
 .hero { background: var(--hero); color: var(--hero-ink); border: 1px solid var(--hero-line); border-radius: 20px; padding: 20px; display: grid; gap: 14px; }
-.hero .lbl { font-size: .82rem; color: var(--hero-sub); }
+.hero .lbl { font-size: .8rem; color: var(--hero-sub); }
 .hero .big { font-family: var(--f-num); font-size: clamp(2.4rem, 11vw, 2.9rem); font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
 .hero .big span { font-size: .55em; color: var(--hero-sub); }
 .stack { display: flex; gap: 2px; height: 10px; }
 .stack i { display: block; border-radius: 3px; min-width: 3px; }
-.hero .row2 { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .85rem; color: var(--hero-sub); }
+.hero .row2 { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .9rem; color: var(--hero-sub); }
 .hero .row2 b { font-family: var(--f-num); font-weight: 600; color: var(--hero-ink); }
 .hero .row2 b.neg { color: var(--hero-danger); }
 .budget { display: grid; gap: 6px; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--hero-sub) 25%, transparent); }
@@ -113,16 +136,16 @@ main .wrap { padding-block: 4px calc(var(--nav-h) + env(safe-area-inset-bottom, 
 .budget .bar i { display: block; height: 100%; border-radius: 4px; background: var(--accent); }
 .budget .bar i.neg { background: var(--hero-danger); }
 .budget small { color: var(--hero-sub); font-size: .8rem; }
-.hero .set-budget { justify-self: start; border: 1px solid color-mix(in srgb, var(--hero-sub) 45%, transparent); background: none; color: var(--hero-ink); border-radius: 999px; padding: 5px 14px; font-size: .82rem; }
+.hero .set-budget { justify-self: start; border: 1px solid color-mix(in srgb, var(--hero-sub) 45%, transparent); background: none; color: var(--hero-ink); border-radius: 999px; padding: 5px 14px; font-size: .8rem; }
 
 /* category tiles */
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; text-align: left; display: grid; gap: 3px; min-width: 0; }
 .tile:hover { border-color: var(--ink-2); }
-.tile .nm { display: flex; align-items: center; gap: 6px; font-size: .82rem; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .nm { display: flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tile .amt { font-family: var(--f-num); font-size: 1.25rem; font-weight: 600; }
-.tile .sub { font-size: .75rem; color: var(--muted); }
-.tile .perday { font-size: .78rem; color: var(--ink-2); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .sub { font-size: .8rem; color: var(--muted); }
+.tile .perday { font-size: .8rem; color: var(--ink-2); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tile .perday b { font-family: var(--f-num); color: var(--ink); font-weight: 600; }
 .tile .tbar { height: 5px; border-radius: 3px; background: var(--track); overflow: hidden; margin-top: 4px; }
 .tile .tbar i { display: block; height: 100%; border-radius: 3px; }
@@ -142,8 +165,8 @@ main .wrap { padding-block: 4px calc(var(--nav-h) + env(safe-area-inset-bottom, 
 .row:hover { background: var(--line-soft); }
 .ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: .8rem; font-weight: 700; }
 .row .mid { min-width: 0; display: grid; }
-.row .desc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: .95rem; }
-.row .meta { color: var(--muted); font-size: .78rem; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.row .desc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: .9rem; }
+.row .meta { color: var(--muted); font-size: .8rem; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .row .amt { font-family: var(--f-num); font-weight: 600; text-align: right; white-space: nowrap; }
 .tag-guess { background: var(--warn-bg); color: var(--warn-ink); border-radius: 6px; padding: 0 6px; font-size: .72rem; }
 .ok-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 0 8px; font-size: .72rem; color: var(--ink-2); }
@@ -154,7 +177,7 @@ main .wrap { padding-block: 4px calc(var(--nav-h) + env(safe-area-inset-bottom, 
 .tools select { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 9px 10px; }
 .sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
 .sum > div { background: var(--surface); padding: 10px 14px; display: grid; min-width: 0; }
-.sum small { color: var(--muted); font-size: .78rem; }
+.sum small { color: var(--muted); font-size: .8rem; }
 .sum b { font-family: var(--f-num); font-weight: 600; font-size: clamp(.98rem, 4vw, 1.2rem); white-space: nowrap; }
 
 /* stats */
@@ -168,14 +191,14 @@ main .wrap { padding-block: 4px calc(var(--nav-h) + env(safe-area-inset-bottom, 
 .daily { position: relative; }
 .daily-plot { position: relative; height: 150px; margin-left: 38px; display: flex; align-items: flex-end; gap: 2px; border-bottom: 1px solid var(--ink-2); }
 .gl { position: absolute; left: -38px; right: 0; border-top: 1px solid var(--line-soft); }
-.gl span { position: absolute; left: 0; top: -.65em; font-family: var(--f-num); font-size: .68rem; color: var(--muted); width: 32px; text-align: right; background: var(--surface); }
+.gl span { position: absolute; left: 0; top: -.65em; font-family: var(--f-num); font-size: .72rem; color: var(--muted); width: 32px; text-align: right; background: var(--surface); }
 .avg { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--ink-2); z-index: 2; pointer-events: none; }
 .avg-key { display: inline-block; width: 22px; border-top: 2px dashed var(--ink-2); }
-.avg span { position: absolute; right: 0; top: -1.5em; font-size: .7rem; color: var(--ink-2); background: var(--surface); padding: 0 4px; }
+.avg span { position: absolute; right: 0; top: -1.5em; font-size: .72rem; color: var(--ink-2); background: var(--surface); padding: 0 4px; }
 .dbar { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: flex-end; position: relative; z-index: 1; cursor: pointer; }
 .dbar i { display: block; width: 100%; background: var(--c1); border-radius: 3px 3px 0 0; }
 .dbar:hover i, .dbar.on i { background: var(--ink); }
-.daily-x { margin-left: 38px; display: flex; justify-content: space-between; font-family: var(--f-num); font-size: .68rem; color: var(--muted); padding-top: 4px; }
+.daily-x { margin-left: 38px; display: flex; justify-content: space-between; font-family: var(--f-num); font-size: .72rem; color: var(--muted); padding-top: 4px; }
 .tip { position: absolute; z-index: 3; pointer-events: none; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 6px 10px; font-size: .8rem; white-space: nowrap; transform: translate(-50%, -100%); }
 .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
 table.mini { width: 100%; border-collapse: collapse; font-size: .9rem; }
@@ -191,7 +214,7 @@ table.mini td small { color: var(--muted); }
 .set-row input:hover, .set-row input:focus { border-color: var(--line); background: var(--bg); }
 .money-in { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 0 10px; }
 .money-in input { border: 0 !important; background: transparent !important; width: 6.5em; padding: 8px 0 !important; font-family: var(--f-num); text-align: right; }
-.money-in span { color: var(--muted); font-size: .85rem; }
+.money-in span { color: var(--muted); font-size: .9rem; }
 .swatches { display: flex; gap: 4px; flex-wrap: wrap; }
 .sw { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); }
 .sw[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
@@ -202,8 +225,8 @@ table.mini td small { color: var(--muted); }
 .big-in { background: var(--surface); border-color: var(--hero-line); padding: 0 14px; }
 .big-in span { font-family: var(--f-num); font-size: 1.1rem; }
 .big-in input { width: 100% !important; font-size: 1.9rem !important; font-weight: 700; text-align: left !important; padding: 6px 0 !important; }
-.chip-ok, .chip-warn { border-radius: 999px; padding: 1px 10px; font-size: .78rem; }
-.chip-ok { background: #e6f4ea; color: #0b5b2e; }
+.chip-ok, .chip-warn { border-radius: 999px; padding: 1px 10px; font-size: .8rem; }
+.chip-ok { background: var(--ok-bg); color: var(--ok-ink); }
 .chip-warn { background: var(--warn-bg); color: var(--warn-ink); }
 .brows { display: grid; padding-block: 4px; }
 .brow { display: grid; gap: 8px; padding: 12px 0; border-top: 1px solid var(--line-soft); }
@@ -215,24 +238,24 @@ table.mini td small { color: var(--muted); }
 .brow-in .eq { color: var(--muted); }
 .alloc-sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
 .alloc-sum > div { background: var(--surface); padding: 10px 12px; display: grid; min-width: 0; }
-.alloc-sum small { color: var(--muted); font-size: .75rem; }
-.alloc-sum b { font-family: var(--f-num); font-weight: 600; font-size: 1.02rem; white-space: nowrap; }
+.alloc-sum small { color: var(--muted); font-size: .8rem; }
+.alloc-sum b { font-family: var(--f-num); font-weight: 600; font-size: 1rem; white-space: nowrap; }
 .alloc-sum .over b { color: var(--danger); }
 .brow .tbar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
 .brow .tbar i { display: block; height: 100%; border-radius: 3px; }
-.brow-day { font-size: .82rem; color: var(--ink-2); background: var(--bg); border-radius: 8px; padding: 5px 9px; justify-self: start; }
+.brow-day { font-size: .8rem; color: var(--ink-2); background: var(--bg); border-radius: 8px; padding: 5px 9px; justify-self: start; }
 .brow-day b { color: var(--ink); }
 .brow-foot { display: flex; justify-content: space-between; gap: 8px; font-size: .8rem; color: var(--muted); flex-wrap: wrap; }
 .icon-btn { width: 36px; height: 36px; border: 0; background: none; border-radius: 10px; color: var(--muted); display: grid; place-items: center; }
 .icon-btn:hover { background: var(--line-soft); color: var(--ink); }
-.chk { display: flex; gap: 6px; align-items: center; font-size: .82rem; color: var(--ink-2); white-space: nowrap; }
+.chk { display: flex; gap: 6px; align-items: center; font-size: .8rem; color: var(--ink-2); white-space: nowrap; }
 .addline { display: flex; gap: 8px; margin-top: 10px; }
 .addline input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 9px 12px; }
 
 /* bottom nav */
 nav.bottom { position: fixed; z-index: 6; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
 nav.bottom .in { max-width: 640px; margin: 0 auto; height: var(--nav-h); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; }
-nav.bottom a { text-decoration: none; color: var(--muted); display: grid; justify-items: center; gap: 2px; font-size: .7rem; padding: 6px 0; }
+nav.bottom a { text-decoration: none; color: var(--muted); display: grid; justify-items: center; gap: 2px; font-size: .72rem; padding: 6px 0; }
 nav.bottom a[aria-current="page"] { color: var(--ink); font-weight: 700; }
 nav.bottom svg { width: 22px; height: 22px; }
 .add-btn { justify-self: center; width: 56px; height: 56px; border-radius: 50%; border: 0; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; margin-top: -26px; box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 40%, transparent); }
@@ -241,14 +264,14 @@ nav.bottom svg { width: 22px; height: 22px; }
 .overlay { position: fixed; inset: 0; z-index: 20; background: rgba(8,12,20,.45); display: flex; align-items: flex-end; justify-content: center; }
 .sheet { background: var(--surface); width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 18px max(18px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); display: grid; gap: 14px; }
 @media (min-width: 640px) { .overlay { align-items: center; } .sheet { border-radius: 20px; } }
-.sheet h3 { margin: 0; font-size: 1.15rem; }
+.sheet h3 { margin: 0; font-size: 1.1rem; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .seg button { border: 0; background: transparent; padding: 7px 16px; }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 .amount-in { width: 100%; font-family: var(--f-num); font-weight: 600; font-size: 2.2rem; border: 0; border-bottom: 2px solid var(--line); background: transparent; padding: 4px 0; }
 .amount-in:focus { outline: none; border-bottom-color: var(--accent); }
 .field { display: grid; gap: 4px; }
-.field label { font-size: .78rem; color: var(--muted); }
+.field label { font-size: .8rem; color: var(--muted); }
 .field input, .field select { border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 9px 12px; width: 100%; min-width: 0; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -256,8 +279,8 @@ nav.bottom svg { width: 22px; height: 22px; }
 .chip[aria-pressed="true"] { border-color: var(--ink); background: var(--surface); box-shadow: inset 0 0 0 1px var(--ink); }
 .actions { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; align-items: center; }
 .sh-head { display: grid; grid-template-columns: 5.5em minmax(0, 1fr) 5.5em; align-items: center; gap: 8px; }
-.sh-head h3 { text-align: center; font-size: 1.05rem; }
-.sh-nav { border: 0; background: none; color: var(--ink-2); padding: 8px 0; text-align: left; font-size: .95rem; min-height: 40px; }
+.sh-head h3 { text-align: center; font-size: 1rem; }
+.sh-nav { border: 0; background: none; color: var(--ink-2); padding: 8px 0; text-align: left; font-size: .9rem; min-height: 40px; }
 .steps { display: flex; gap: 6px; justify-content: center; margin-top: -6px; }
 .steps i { width: 24px; height: 4px; border-radius: 2px; background: var(--line); }
 .steps i.on { background: var(--accent); }
@@ -267,40 +290,40 @@ nav.bottom svg { width: 22px; height: 22px; }
 .amt-display b { font-family: var(--f-num); font-weight: 700; font-size: clamp(2.4rem, 12vw, 3.2rem); letter-spacing: -0.02em; line-height: 1.1; color: var(--ink); }
 .amt-display b.zero { color: var(--muted); }
 .keypad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.keypad button.op { background: #fff3ef; border-color: #f3c2b4; color: #b8341c; }
-.keypad button.op:active { background: #fbdcd2; }
-.amt-expr { text-align: center; color: var(--muted); font-family: var(--f-num); font-size: .95rem; min-height: 1.4em; overflow-wrap: anywhere; margin-bottom: -6px; }
-.keypad button { height: clamp(50px, 7.5vh, 62px); border: 1px solid #d0d5dd; background: #eef1f5; border-radius: 14px; font-family: var(--f-num); font-size: 1.55rem; font-weight: 600; color: #101828; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-.keypad button:active { background: #d9dee6; }
-.btn.big { min-height: 52px; font-size: 1.02rem; border-radius: 14px; width: 100%; }
+.keypad button.op { background: var(--op-bg); border-color: var(--op-line); color: var(--op-ink); }
+.keypad button.op:active { background: var(--op-active); }
+.amt-expr { text-align: center; color: var(--muted); font-family: var(--f-num); font-size: .9rem; min-height: 1.4em; overflow-wrap: anywhere; margin-bottom: -6px; }
+.keypad button { height: clamp(50px, 7.5vh, 62px); border: 1px solid var(--key-line); background: var(--key-bg); border-radius: 14px; font-family: var(--f-num); font-size: 1.55rem; font-weight: 600; color: var(--key-ink); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.keypad button:active { background: var(--key-active); }
+.btn.big { min-height: 52px; font-size: 1rem; border-radius: 14px; width: 100%; }
 .amt-mini { text-align: center; color: var(--ink-2); }
 .amt-mini b { color: var(--ink); font-size: 1.4rem; margin-left: 4px; }
 .cat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .cat-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 12px 4px 10px; display: grid; justify-items: center; gap: 6px; min-width: 0; }
 .cat-btn[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
-.cat-btn .ico { width: 42px; height: 42px; font-size: .95rem; }
-.cat-name { font-size: .82rem; text-align: center; line-height: 1.3; overflow-wrap: anywhere; }
+.cat-btn .ico { width: 42px; height: 42px; font-size: .9rem; }
+.cat-name { font-size: .8rem; text-align: center; line-height: 1.3; overflow-wrap: anywhere; }
 .pick-rows { display: grid; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
 .pick-row { display: grid; grid-template-columns: 4em minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 12px 14px; border: 0; background: var(--surface); text-align: left; min-height: 52px; }
 .pick-row + .pick-row { border-top: 1px solid var(--line-soft); }
-.pick-row .lbl { color: var(--muted); font-size: .85rem; }
+.pick-row .lbl { color: var(--muted); font-size: .9rem; }
 .pick-row b { font-size: 1.25rem; }
 .pick-cat { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
 .pick-row .chev { color: var(--muted); font-size: 1.3rem; }
 .acct-bar { display: flex; gap: 2px; height: 10px; border-radius: 5px; overflow: hidden; }
 .acct-bar i { display: block; min-width: 3px; }
-.acct-legend { display: flex; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; margin-top: 8px; font-size: .88rem; }
+.acct-legend { display: flex; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; margin-top: 8px; font-size: .9rem; }
 .acct-legend small { color: var(--muted); }
 .cat-rows { display: grid; }
 .cat-row { display: grid; grid-template-columns: 6.2em minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line-soft); }
 .cat-row:first-child { border-top: 0; }
-.cat-row .lbl { font-size: .88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cat-row .lbl { font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cat-row .mid { display: grid; gap: 3px; min-width: 0; }
-.cat-row .mid small { font-size: .74rem; color: var(--muted); }
+.cat-row .mid small { font-size: .72rem; color: var(--muted); }
 .cat-row .bar-track { height: 8px; background: var(--track); border-radius: 4px; overflow: hidden; display: block; }
 .cat-row .bar-fill { border-radius: 4px; }
 .cat-row .val { display: grid; justify-items: end; }
-.cat-row .val small { font-size: .74rem; color: var(--muted); }
+.cat-row .val small { font-size: .72rem; color: var(--muted); }
 .cat-row .val small.over { color: var(--danger); } .cat-row .val small.pos { color: var(--in); }
 button.dbar { border: 0; background: none; padding: 0; }
 .day-list { border-top: 1px solid var(--line); padding-top: 8px; }
@@ -308,12 +331,12 @@ button.dbar { border: 0; background: none; padding: 0; }
 .day-item { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line-soft); cursor: pointer; }
 .day-item:hover { background: var(--line-soft); }
 .day-item .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.day-item .rank { font-family: var(--f-num); color: var(--muted); font-size: .85rem; }
-.acct-tag { font-size: .7rem; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+.day-item .rank { font-family: var(--f-num); color: var(--muted); font-size: .9rem; }
+.acct-tag { font-size: .72rem; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
 .wk { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .wk-box { background: var(--bg); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; min-width: 0; }
-.wk-box small { color: var(--muted); font-size: .76rem; }
-.wk-box b { font-size: 1.15rem; }
+.wk-box small { color: var(--muted); font-size: .8rem; }
+.wk-box b { font-size: 1.1rem; }
 .wk-cats { display: grid; gap: 2px; margin-top: 6px; font-size: .8rem; }
 .wk-cats .dot { margin-right: 4px; }
 .wallet.link { cursor: pointer; border: 0; background: none; padding: 2px 4px; border-radius: 8px; font: inherit; color: inherit; text-align: right; }
@@ -321,11 +344,11 @@ button.dbar { border: 0; background: none; padding: 0; }
 .wallet.link small::after { content: ' ›'; }
 .wallet .due-dot { color: var(--danger); font-weight: 700; }
 .page-h { display: flex; justify-content: space-between; align-items: baseline; margin: 0 2px -4px; }
-.page-h h2 { margin: 0; font-size: 1.15rem; }
-.card-remind { display: grid; gap: 4px; width: 100%; text-align: left; border: 1px solid #f3d38a; background: var(--warn-bg); color: var(--warn-ink); border-radius: 14px; padding: 12px 14px; font-size: .9rem; }
-.card-remind.urgent { background: #fdecea; border-color: #f5b5ad; color: #9b1c0e; }
+.page-h h2 { margin: 0; font-size: 1.1rem; }
+.card-remind { display: grid; gap: 4px; width: 100%; text-align: left; border: 1px solid var(--warn-line); background: var(--warn-bg); color: var(--warn-ink); border-radius: 14px; padding: 12px 14px; font-size: .9rem; }
+.card-remind.urgent { background: var(--urgent-bg); border-color: var(--urgent-line); color: var(--urgent-ink); }
 .cr-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-.cr-chip { flex: none; border-radius: 999px; padding: 1px 10px; font-size: .78rem; font-weight: 700; background: currentColor; }
+.cr-chip { flex: none; border-radius: 999px; padding: 1px 10px; font-size: .8rem; font-weight: 700; background: currentColor; }
 .cr-chip { color: inherit; background: rgba(0,0,0,.08); }
 .cc-hero { gap: 10px; }
 .cc-top { display: flex; justify-content: space-between; align-items: center; }
@@ -335,7 +358,7 @@ button.dbar { border: 0; background: none; padding: 0; }
 .cc-due span { font-size: 1rem; color: var(--hero-sub); font-weight: 500; }
 .cc-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .cc-tiles > div { background: var(--surface); border-radius: 12px; padding: 10px 12px; display: grid; min-width: 0; }
-.cc-tiles small { color: var(--muted); font-size: .74rem; }
+.cc-tiles small { color: var(--muted); font-size: .72rem; }
 .cc-tiles b { font-size: 1.25rem; }
 .cc-pay { display: flex; gap: 6px; flex-wrap: wrap; }
 .cc-pay .btn { flex: 1 1 0; padding: 10px 6px; }
@@ -347,8 +370,8 @@ button.dbar { border: 0; background: none; padding: 0; }
 .cc-cal.warn { color: var(--danger); }
 .cc-set .set-row > span { white-space: nowrap; }
 .cc-set .money-in input { width: 5.5em !important; }
-.cc-advice { background: var(--surface); border-radius: 12px; padding: 10px 12px; display: grid; gap: 4px; font-size: .88rem; color: var(--ink-2); border: 1px solid var(--hero-line); }
-.cc-advice > b { color: var(--ink); font-size: .98rem; }
+.cc-advice { background: var(--surface); border-radius: 12px; padding: 10px 12px; display: grid; gap: 4px; font-size: .9rem; color: var(--ink-2); border: 1px solid var(--hero-line); }
+.cc-advice > b { color: var(--ink); font-size: 1rem; }
 .cc-pay .btn.arm { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 .cc-pay .btn:disabled { opacity: .7; }
 .cc-warn { background: var(--warn-bg); color: var(--warn-ink); border-radius: 14px; padding: 12px 14px; display: grid; gap: 4px; font-size: .9rem; }
@@ -363,7 +386,7 @@ table.mini.rules td:last-child { font-family: var(--f-body); white-space: normal
 .rc-when { color: var(--warn-ink); font-weight: 700; }
 .rc-main { display: flex; align-items: center; gap: 8px; }
 .rc-main b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rc-amt { font-weight: 700; font-size: 1.15rem; }
+.rc-amt { font-weight: 700; font-size: 1.1rem; }
 .rc-btns { display: flex; gap: 6px; }
 .rc-btns .btn { flex: 1 1 0; padding: 9px 4px; }
 .rc-li .nm { white-space: normal; } .rc-li .nm small { display: block; }
@@ -375,7 +398,7 @@ table.mini.rules td:last-child { font-family: var(--f-body); white-space: normal
 .fan-label { position: absolute; left: 0; right: 0; display: flex; justify-content: center; padding: 0 16px; animation: fanPill .25s cubic-bezier(.2,1.4,.4,1) both; }
 .fan-pill { background: rgba(16,24,40,.92); color: #fff; border-radius: 16px; padding: 8px 16px; display: grid; gap: 1px; text-align: center; max-width: 100%; }
 .fan-pill.bump { animation: fanBump .18s ease-out; }
-.fan-label b { font-size: 1.15rem; } .fan-label small { opacity: .8; font-size: .82rem; }
+.fan-label b { font-size: 1.1rem; } .fan-label small { opacity: .8; font-size: .8rem; }
 .fan-in { transform-origin: var(--cx) var(--cy); animation: fanIn .32s cubic-bezier(.2,1.35,.4,1) both; }
 .fan-seg { transform-box: fill-box; transform-origin: center; transition: transform .18s cubic-bezier(.2,1.6,.4,1); }
 .fan-seg path { fill: var(--f); stroke: var(--line); stroke-width: 1; transition: fill .14s; }
@@ -402,8 +425,8 @@ table.mini.rules td:last-child { font-family: var(--f-body); white-space: normal
 @media (prefers-reduced-motion: reduce) { .fan, .fan-in, .fan-label, .fan-pill.bump, .fan.closing { animation: none !important; } .fan-seg, .add-btn { transition: none; } }
 #add { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .toast button { border: 0; background: none; color: var(--c4); font-weight: 700; margin-left: 14px; padding: 4px 2px; font-size: .9rem; }
-.q-scope { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .84rem; color: var(--muted); padding: 0 4px; }
-.yr-x { margin-left: 38px; display: flex; gap: 2px; font-family: var(--f-num); font-size: .68rem; color: var(--muted); padding-top: 4px; }
+.q-scope { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .9rem; color: var(--muted); padding: 0 4px; }
+.yr-x { margin-left: 38px; display: flex; gap: 2px; font-family: var(--f-num); font-size: .72rem; color: var(--muted); padding-top: 4px; }
 .yr-x span { flex: 1 1 0; text-align: center; }
 .yr-plot .dbar.cur i { background: var(--ink); }
 .yr-plot .dbar.none { cursor: default; }
@@ -411,16 +434,75 @@ table.mini.rules td:last-child { font-family: var(--f-body); white-space: normal
 .mo-check { position: fixed; z-index: 40; left: 50%; top: 42%; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; background: var(--in); display: grid; place-items: center; pointer-events: none; box-shadow: 0 10px 30px rgba(6,118,71,.35); }
 .mo-check path { stroke-dasharray: 40; stroke-dashoffset: 40; animation: moTick .32s .12s ease-out forwards; }
 @keyframes moTick { to { stroke-dashoffset: 0; } }
-.mo-fly { position: fixed; z-index: 41; left: 0; top: 0; pointer-events: none; background: var(--ink); color: #fff; border-radius: 999px; padding: 6px 14px; font-family: var(--f-num); font-weight: 700; font-size: 1.1rem; white-space: nowrap; }
+.mo-fly { position: fixed; z-index: 41; left: 0; top: 0; pointer-events: none; background: var(--ink); color: var(--bg); border-radius: 999px; padding: 6px 14px; font-family: var(--f-num); font-weight: 700; font-size: 1.1rem; white-space: nowrap; }
 .mo-fresh { animation: moFresh 1.4s ease-out; }
-@keyframes moFresh { 0%, 30% { background: #fdf1d6; } 100% { background: var(--surface); } }
+@keyframes moFresh { 0%, 30% { background: var(--fresh); } 100% { background: var(--surface); } }
 .rc-card { position: relative; overflow: hidden; }
-.rc-ok { position: absolute; inset: 0; background: var(--in); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 1.05rem; }
+.rc-ok { position: absolute; inset: 0; background: var(--in); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 1rem; }
 .rc-ok svg path { stroke-dasharray: 40; stroke-dashoffset: 40; animation: moTick .3s .1s ease-out forwards; }
 .keypad button { transition: transform .08s ease-out, background .08s; }
 .keypad button:active { transform: scale(.92); }
 #e-amtview { display: inline-block; }
 html, body { overscroll-behavior-x: none; }
+/* 首页紧凑版：总览和分类格子扁一点，下面的「最近」可以直接看到 */
+.hero-c { padding: 14px 16px; gap: 10px; border-radius: 18px; }
+.hero-c .h-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.hero-c .h-main { display: grid; gap: 2px; min-width: 0; }
+.hero-c .lbl { font-size: .8rem; }
+.hero-c .big { font-size: clamp(1.9rem, 9vw, 2.3rem); }
+.hero-c .row2 { display: grid; justify-items: end; gap: 0; font-size: .8rem; flex-wrap: nowrap; white-space: nowrap; }
+.hero-c .stack { height: 6px; }
+.hero-c .budget { gap: 5px; padding-top: 10px; }
+.hero-c .budget .top-line { align-items: baseline; }
+.hero-c .budget .left { font-size: 1.1rem; margin-left: 4px; }
+.hero-c .budget .pd { font-size: .8rem; color: var(--hero-sub); white-space: nowrap; }
+.hero-c .budget .pd b { font-family: var(--f-num); color: var(--hero-ink); }
+.hero-c .budget .bar { height: 6px; }
+.hero-c .budget small { font-size: .8rem; }
+.tiles { gap: 8px; }
+.tile { padding: 10px 12px; gap: 6px; border-radius: 12px; }
+.tile .t-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; min-width: 0; }
+.tile .t-top .nm { min-width: 0; font-size: .8rem; }
+.tile .t-top .amt { font-size: 1rem; white-space: nowrap; }
+.tile .tbar { margin-top: 0; height: 4px; }
+.tile .sub { display: flex; justify-content: space-between; align-items: baseline; gap: 2px 8px; flex-wrap: wrap; font-size: .72rem; }
+.tile .sub .rest { color: var(--muted); white-space: nowrap; }
+.tile .sub .over { color: var(--danger); }
+.tile .perday { margin: 0; font-size: .8rem; color: var(--ink-2); white-space: nowrap; }
+.tile .perday b { font-size: .9rem; }
+.guide { position: fixed; inset: 0; z-index: 45; background: var(--bg); overflow-y: auto; }
+.guide-in { max-width: 480px; margin: 0 auto; min-height: 100%; padding: calc(env(safe-area-inset-top, 0px) + 28px) 20px calc(env(safe-area-inset-bottom, 0px) + 24px); display: grid; align-content: start; gap: 16px; }
+.guide-in h2 { margin: 8px 0 0; font-size: 1.35rem; }
+.guide-in .note { margin: -8px 0 0; }
+.guide-in .steps { justify-content: flex-start; margin: 0; }
+.guide-in .chips { gap: 8px; }
+.guide-in .chip { padding: 8px 14px 8px 11px; font-size: .9rem; }
+.g-btns { display: flex; gap: 10px; margin-top: 12px; }
+.g-btns .btn { flex: 1; min-height: 48px; }
+.cat-h { margin-bottom: -10px; } .cat-h .linkish { font-size: .8rem; }
+.theme-seg { display: flex; } .theme-seg button { flex: 1; }
+.money-in input:focus, .money-in input:focus-visible { outline: none; }
+.money-in:focus-within { border-color: var(--accent); }
+.hero-c .h-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: -6px; }
+.hseg { display: inline-flex; background: color-mix(in srgb, var(--hero-sub) 14%, transparent); border-radius: 999px; padding: 2px; }
+.hseg button { border: 0; background: none; color: var(--hero-sub); font-size: .72rem; padding: 3px 11px; border-radius: 999px; }
+.hseg button[aria-pressed="true"] { background: var(--surface); color: var(--hero-ink); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.hero-today .h-top { align-items: flex-end; }
+.hero-today .h-left { display: grid; justify-items: end; font-size: .8rem; color: var(--hero-sub); }
+.hero-today .h-left b { font-family: var(--f-num); font-size: 1.35rem; color: var(--hero-ink); line-height: 1.2; }
+.hero-today .h-left b.ok { color: var(--in); } .hero-today .h-left b.neg { color: var(--hero-danger); }
+.hero-today .h-foot { color: var(--hero-sub); font-size: .72rem; }
+.clist { padding: 4px 14px; display: grid; }
+.crow { border: 0; background: none; text-align: left; display: grid; gap: 5px; padding: 10px 0; border-top: 1px solid var(--line-soft); width: 100%; }
+.crow:first-child { border-top: 0; }
+.crow .t-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.crow .nm { display: flex; align-items: center; gap: 6px; font-size: .9rem; color: var(--ink-2); }
+.crow .amt { font-family: var(--f-num); font-weight: 600; font-size: 1rem; }
+.crow .amt.over { color: var(--danger); }
+.crow .tbar { height: 5px; border-radius: 3px; background: var(--track); overflow: hidden; display: block; }
+.crow .tbar i { display: block; height: 100%; border-radius: 3px; }
+.crow .sub { display: flex; justify-content: space-between; gap: 8px; font-size: .72rem; color: var(--muted); }
+.crow .sub .over { color: var(--danger); } .crow .perday { color: var(--ink-2); font-size: .8rem; } .crow .perday b { font-family: var(--f-num); color: var(--ink); }
 /* 像 App 一样：长按不会选字、不会跳出「复制 / 全选」（输入框除外） */
 body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 input, textarea, select, [contenteditable] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
@@ -432,11 +514,11 @@ main { overflow-x: clip; }
 .ctx { position: fixed; inset: 0; z-index: 35; background: rgba(8,12,20,.3); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: ctxBg .2s ease-out; }
 .ctx.closing { animation: ctxOut .15s ease-in forwards; }
 .ctx-row { position: fixed; margin: 0; background: var(--surface); border-radius: 14px; box-shadow: 0 14px 34px rgba(16,24,40,.24); pointer-events: none; transform-origin: center; animation: ctxLift .3s cubic-bezier(.2,1.5,.4,1) forwards; }
-.ctx-menu { position: fixed; background: rgba(250,250,252,.96); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-radius: 14px; overflow: hidden; box-shadow: 0 12px 40px rgba(16,24,40,.28); animation: ctxMenu .32s cubic-bezier(.2,1.3,.4,1) both; }
-.ctx-menu button { display: flex; justify-content: space-between; align-items: center; width: 100%; border: 0; background: none; padding: 13px 16px; font-size: 1.02rem; text-align: left; color: var(--ink); }
+.ctx-menu { position: fixed; background: var(--menu-bg); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-radius: 14px; overflow: hidden; box-shadow: 0 12px 40px rgba(16,24,40,.28); animation: ctxMenu .32s cubic-bezier(.2,1.3,.4,1) both; }
+.ctx-menu button { display: flex; justify-content: space-between; align-items: center; width: 100%; border: 0; background: none; padding: 13px 16px; font-size: 1rem; text-align: left; color: var(--ink); }
 .ctx-menu button + button { border-top: 1px solid rgba(60,60,67,.16); }
 .ctx-menu button:active { background: rgba(0,0,0,.07); }
-.ctx-menu .danger { color: #e5322d; }
+.ctx-menu .danger { color: var(--danger); }
 @keyframes ctxBg { from { background: rgba(8,12,20,0); -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); } }
 @keyframes ctxOut { to { opacity: 0; } }
 @keyframes ctxLift { to { transform: scale(1.03); } }
@@ -455,8 +537,7 @@ main { overflow-x: clip; }
       <button class="m-title" id="m-label" aria-haspopup="dialog" aria-label="选月份">—</button>
       <button id="m-next" aria-label="下个月"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
     </div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <div class="wallets" id="wallets"></div>
+ <div style="display:flex;align-items:center;gap:6px">
       <a href="#settings" class="gear" id="gear" aria-label="设置"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></a>
     </div>
   </div>
@@ -615,6 +696,7 @@ async function reload() {
     applyData(d);
     S.loaded = true; lastLoad = Date.now();
     render();
+    if (!S.txns.size && !store.get('ledger.onboarded') && guideBox.hidden) openGuide();
   } catch (e) {
     if (!S.loaded) $('#view').innerHTML = `<div class="status">读取失败：${esc(errMsg(e))}<br><br><button class="btn" onclick="location.reload()">再试一次</button></div>`;
     else toast(e.offline ? '没有网络，显示的是上次的资料' : '同步失败：' + errMsg(e));
@@ -653,7 +735,7 @@ function renderHeader() {
   const [y, m] = S.month.split('-');
   $('#m-label').innerHTML = `${y}年${+m}月 <span class="caret" aria-hidden="true">▼</span>`;
   $('#m-next').disabled = S.month >= maxMonth();
-  $('#wallets').innerHTML = settings().accounts.map(a => a.kind === 'credit'
+  if ($('#wallets')) $('#wallets').innerHTML = settings().accounts.map(a => a.kind === 'credit'
     ? (() => { const s = cardStmts(a.id)[0]; const k = s ? stmtStatus(s) : null; const warn = k && k.k !== 'full' && k.k !== 'lateInt' && k.left <= 7;
         return `<button class="wallet link" data-goto="card" aria-label="${esc(a.name)} 还款"><small>${esc(a.name)} 本月刷</small><b>${money(cardSpend(a.id))}${warn ? ' <span class="due-dot">●</span>' : ''}</b></button>`; })()
     : `<div class="wallet"><small>${esc(a.name)}</small><b>${money(balance(a.id))}</b></div>`).join('');
@@ -690,16 +772,25 @@ function renderHome() {
   const b = budget();
   const total = s.out || 1;
   const stack = [...byCat].sort((a, b2) => b2[1] - a[1]);
-  const { left: daysLeft, isPast } = daysInfo();
+  const { left: daysLeft, isPast, isCur } = daysInfo();
+  // 今天：预算剩下的（算到昨天为止）平均分到剩下的每一天，就是今天的额度
+  const td = today();
+  const todaySpent = r2(all.filter(t => t.date === td && t.dir === 'out' && counts(t)).reduce((a, t) => a + t.amount, 0));
+  const hasBud = b.total > 0;
+  const remBefore = r2(b.total - (s.out - todaySpent));
+  const allow = hasBud && daysLeft > 0 ? Math.max(0, r2(remBefore / daysLeft)) : 0;
+  const todayLeft = r2(allow - todaySpent);
+  const mode = isCur && (store.get('ledger.heroMode') || 'today') === 'today' ? 'today' : 'month';
+  const seg = isCur ? `<div class="hseg" role="group" aria-label="看今天或本月"><button data-hmode="today" aria-pressed="${mode === 'today'}">今天</button><button data-hmode="month" aria-pressed="${mode === 'month'}">本月</button></div>` : '';
   let budgetHtml = '';
   if (b.total > 0) {
     const rem = r2(b.total - s.out);
     const pct = Math.min(100, s.out / b.total * 100);
-    const perDay = daysLeft > 0 && rem > 0 ? `，每天约 ${money(r2(rem / daysLeft))}` : '';
+    const perDay = !isPast && daysLeft > 0 && rem > 0 ? `每天约 <b>${money(r2(rem / daysLeft))}</b>` : '';
     budgetHtml = `<div class="budget">
-      <div class="top-line"><span class="lbl">${rem >= 0 ? (isPast ? '这个月省下' : '还可以花') : '超出预算'}</span><span class="left ${rem < 0 ? 'neg' : ''}" data-n="bleft" data-v="${Math.abs(rem)}">${money(Math.abs(rem))}</span></div>
+      <div class="top-line"><span class="lbl">${rem >= 0 ? (isPast ? '这个月省下' : '还可以花') : '超出预算'} <span class="left ${rem < 0 ? 'neg' : ''}" data-n="bleft" data-v="${Math.abs(rem)}">${money(Math.abs(rem))}</span></span><span class="pd">${perDay}</span></div>
       <div class="bar"><i class="${rem < 0 ? 'neg' : ''}" data-w="bbar" ${rem < 0 ? 'data-o="1"' : ''} style="width:${pct.toFixed(1)}%"></i></div>
-      <small>预算 ${money(b.total)} · 已用 ${Math.round(s.out / b.total * 100)}%${!isPast && daysLeft ? ` · 还剩 ${daysLeft} 天${perDay}` : ''}</small>
+      <small>预算 ${money(b.total)} · 已用 ${Math.round(s.out / b.total * 100)}%${!isPast && daysLeft ? ` · 还剩 ${daysLeft} 天` : ''}</small>
     </div>`;
   } else {
     budgetHtml = `<button class="set-budget" data-goto="budget">＋ 设个月预算</button>`;
@@ -709,30 +800,46 @@ function renderHome() {
   const tiles = spendCats().map(c => ({ c, v: byCat.get(c.id) || 0, bud: catBud[c.id] || 0 }))
     .filter(x => x.v > 0 || x.bud > 0).sort((a, b2) => b2.v - a.v);
   const recent = all.sort(sortDesc).slice(0, 5);
-  const quickCats = spendCats().filter(c => c.id !== 'other').map(c => ({ c, n: [...S.txns.values()].filter(t => t.cat === c.id && t.dir === 'out').length }))
-    .sort((a, b2) => b2.n - a.n).slice(0, 4).map(x => x.c);
+  // 有预算的排前面（快超支的最前），没预算的按金额；平常只显示前 4 个，「最近」才不用往下拉
+  tiles.sort((x, y) => (y.bud > 0) - (x.bud > 0) || (y.bud > 0 ? y.v / y.bud - x.v / x.bud : y.v - x.v));
+  const showAll = !!store.get('ledger.allCats'), many = tiles.length > 4;
+  const shown = many && !showAll ? tiles.slice(0, 4) : tiles;
+  const asList = showAll && tiles.length >= 6;   // 展开而且分类很多：改成一行一个的列表
+  const todayHero = `<section class="hero hero-c hero-today">
+    <div class="h-head"><span class="lbl">今天已花</span>${seg}</div>
+    <div class="h-top">
+      <div class="big" data-n="td" data-v="${todaySpent}" data-f="big">RM${fmt(todaySpent).split('.')[0]}<span>.${fmt(todaySpent).split('.')[1]}</span></div>
+      ${hasBud ? (remBefore <= 0 ? `<div class="h-left"><span>本月预算</span><b class="neg">已经用完</b></div>`
+        : `<div class="h-left"><span>${todayLeft >= 0 ? '今天还可以花' : '今天超出'}</span><b class="${todayLeft < 0 ? 'neg' : 'ok'}" data-n="tdl" data-v="${Math.abs(todayLeft)}">${money(Math.abs(todayLeft))}</b></div>`) : ''}
+    </div>
+    ${hasBud && remBefore > 0 ? `<div class="budget" style="border-top:0;padding-top:0"><div class="bar"><i class="${todayLeft < 0 ? 'neg' : ''}" data-w="tdbar" ${todayLeft < 0 ? 'data-o="1"' : ''} style="width:${Math.min(100, allow > 0 ? todaySpent / allow * 100 : 100).toFixed(1)}%"></i></div></div>` : ''}
+    <small class="h-foot">${hasBud ? `今天的额度 ${money(allow)} · 本月已花 ${money(s.out)} · 还剩 ${daysLeft} 天` : `本月已花 ${money(s.out)}`}</small>
+    ${hasBud ? '' : `<button class="set-budget" data-goto="budget">＋ 设个月预算，就能算出每天可以花多少</button>`}
+  </section>`;
 
-  return `${cardReminderHtml()}${recurCardsHtml()}<section class="hero">
-    <span class="lbl">${isPast ? '这个月花了' : '这个月到现在花了'}</span>
-    <div class="big" data-n="out" data-v="${s.out}" data-f="big">RM${fmt(s.out).split('.')[0]}<span>.${fmt(s.out).split('.')[1]}</span></div>
+  return `${cardReminderHtml()}${recurCardsHtml()}${mode === 'today' ? todayHero : `<section class="hero hero-c">
+    <div class="h-head"><span class="lbl">${isPast ? '这个月花了' : '这个月到现在花了'}</span>${seg}</div>
+    <div class="h-top">
+      <div class="h-main">
+        <div class="big" data-n="out" data-v="${s.out}" data-f="big">RM${fmt(s.out).split('.')[0]}<span>.${fmt(s.out).split('.')[1]}</span></div></div>
+      <div class="row2"><span>收入 <b data-n="inn" data-v="${s.inn}">${money(s.inn)}</b></span><span>结余 <b class="${s.net < 0 ? 'neg' : ''}" data-n="net" data-v="${s.net}">${money(s.net)}</b></span></div>
+    </div>
     ${stack.length ? `<div class="stack" role="img" aria-label="各分类占比">${stack.map(([id, v]) => `<i style="flex:${v} 1 0;background:${color(catOf(id).color)}"></i>`).join('')}</div>` : ''}
-    <div class="row2"><span>收入 <b data-n="inn" data-v="${s.inn}">${money(s.inn)}</b></span><span>结余 <b class="${s.net < 0 ? 'neg' : ''}" data-n="net" data-v="${s.net}">${money(s.net)}</b></span></div>
     ${budgetHtml}
-  </section>
-  ${tiles.length ? `<div class="tiles">${tiles.map(({ c, v, bud }) => {
+  </section>`}
+  ${many ? `<h2 class="sec-h cat-h"><span>分类</span><button class="linkish" data-catall="1">${showAll ? '只看前 4 个' : `显示全部（${tiles.length}）`}</button></h2>` : ''}
+  ${tiles.length ? `<div class="${asList ? 'card clist' : 'tiles'}">${shown.map(({ c, v, bud }) => {
     const over = bud > 0 && v > bud;
-    return `<button class="tile" data-filtercat="${c.id}">
-      <span class="nm"><span class="dot" style="background:${color(c.color)}"></span>${esc(c.name)}</span>
-      <span class="amt ${over ? 'over' : ''}" data-n="t:${c.id}" data-v="${v}">${money(v)}</span>
-      <span class="sub">${bud > 0 ? `${over ? '超出 ' + money(r2(v - bud)) : '还剩 ' + money(r2(bud - v))} · 预算 ${money(bud)}` : `占 ${Math.round(v / total * 100)}%`}</span>
+    const pd = bud > 0 && !over && !isPast && daysLeft > 0 ? `<span class="perday">每天约可花 <b>${money(Math.floor((bud - v) / daysLeft * 100) / 100)}</b></span>` : '';
+    return `<button class="${asList ? 'crow' : 'tile'}" data-filtercat="${c.id}" aria-label="${esc(c.name)}">
+      <span class="t-top"><span class="nm"><span class="dot" style="background:${color(c.color)}"></span>${esc(c.name.split(' / ')[0])}</span>
+        <span class="amt ${over ? 'over' : ''}" data-n="t:${c.id}" data-v="${v}">${money(v)}</span></span>
       ${bud > 0 ? `<span class="tbar"><i data-w="t:${c.id}" ${over ? 'data-o="1"' : ''} style="width:${Math.min(100, v / bud * 100).toFixed(1)}%;background:${over ? 'var(--danger)' : color(c.color)}"></i></span>` : ''}
-      ${bud > 0 && !over && !isPast && daysLeft > 0 ? `<span class="perday">每天约可花 <b>${money(Math.floor((bud - v) / daysLeft * 100) / 100)}</b></span>` : ''}
+      <span class="sub">${bud > 0 ? (over ? `<span class="over">超出 ${money(r2(v - bud))}</span>` : `${pd}<span class="rest">剩 ${money(r2(bud - v))}</span>`) : `<span>占 ${Math.round(v / total * 100)}%</span>`}</span>
     </button>`; }).join('')}</div>` : ''}
-  <h2 class="sec-h">一键记账</h2>
-  <div class="quick">${quickCats.map(c => `<button class="qbtn" data-quick="${c.id}"><span class="dot" style="background:${color(c.color)}"></span>${esc(c.name.split(' / ')[0])}</button>`).join('')}<button class="qbtn" data-quick="">其他…</button></div>
-  ${guesses ? `<button class="banner" data-guesses="1"><span>有 <b>${guesses}</b> 笔分类是我猜的，花 1 分钟确认</span><span aria-hidden="true">›</span></button>` : ''}
   <h2 class="sec-h"><span>最近</span><a class="linkish" href="#flow">全部流水</a></h2>
-  ${recent.length ? `<div class="rows">${recent.map(t => rowHtml(t, false)).join('')}</div>` : `<div class="empty">这个月还没有记录。点下面的 ＋ 记第一笔。</div>`}`;
+  ${recent.length ? `<div class="rows">${recent.map(t => rowHtml(t, false)).join('')}</div>` : `<div class="empty">这个月还没有记录。点下面的 ＋ 记第一笔。</div>`}
+  ${guesses ? `<button class="banner" data-guesses="1"><span>有 <b>${guesses}</b> 笔分类是我猜的，花 1 分钟确认</span><span aria-hidden="true">›</span></button>` : ''}`;
 }
 
 /* ---------- flow ---------- */
@@ -1385,13 +1492,17 @@ function renderSettings() {
     <p class="note" style="margin-bottom:0">期初余额是第一笔记录之前账户里有多少钱。</p>
   </section>
   ${recurSettingsHtml()}
+  <section class="card"><h2>外观</h2>
+    <div class="seg theme-seg" role="group" aria-label="外观">${[['auto', '跟随手机'], ['light', '浅色'], ['dark', '深色']].map(([k, n]) => `<button data-theme="${k}" aria-pressed="${themeMode() === k}">${n}</button>`).join('')}</div>
+  </section>
+  ${creditAcct() ? `<section class="card"><h2>信用卡</h2><button class="btn" data-goto="card" style="width:100%;text-align:left;display:flex;justify-content:space-between"><span>${esc(creditAcct().name)} 还款</span><span aria-hidden="true">›</span></button></section>` : ''}
   <section class="card"><h2>长按 ＋ 一划记账</h2>
     <label class="chk"><input type="checkbox" id="sfx-on" ${SFX.on ? 'checked' : ''}> 音效</label>
     <p class="note" style="margin-bottom:0">长按底部的 ＋ 不放，往上划：内圈选账户，外圈选分类，放手就去输入金额。划回中间的 ✕ 放手是取消。长按一笔记录可以修改或删除。音效走手机的媒体音量，静音模式也会响，不想要就关掉。</p>
   </section>
   <section class="card"><h2>数据</h2>
     <p class="note" style="margin-top:0">共 ${S.txns.size} 笔记录，存在你自己的 Google Sheet。也可以直接在 Sheet 里看和改，回到 App 会自动重新读取。</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${S.sheetUrl ? `<a class="btn" href="${esc(S.sheetUrl)}" target="_blank" rel="noopener" style="text-decoration:none;color:var(--ink)">打开 Google Sheet</a>` : ''}<button class="btn" id="resync">重新读取</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${S.sheetUrl ? `<a class="btn" href="${esc(S.sheetUrl)}" target="_blank" rel="noopener" style="text-decoration:none;color:var(--ink)">打开 Google Sheet</a>` : ''}<button class="btn" id="resync">重新读取</button><button class="btn" data-guide="1">新手引导</button></div>
     <p class="note" style="margin-bottom:0">App 版本：${APP_VER}${WEB ? ` · 主屏幕版${(store.get('ledger.outbox') || []).length ? ` · 还有 ${(store.get('ledger.outbox') || []).length} 项等网络同步` : ''}` : ''}</p>
   </section>`;
 }
@@ -1778,7 +1889,7 @@ function drawPicker() {
     <button class="btn" data-ym="${today().slice(0, 7)}">回到本月</button>
   </div>`;
 }
-$('#wallets').addEventListener('click', e => { const b = e.target.closest('[data-goto]'); if (b) go(b.dataset.goto); });
+$('#wallets')?.addEventListener('click', e => { const b = e.target.closest('[data-goto]'); if (b) go(b.dataset.goto); });
 $('#m-label').onclick = () => { pickYear = +S.month.slice(0, 4); drawPicker(); $('#mpick').hidden = false; };
 $('#mpick').addEventListener('click', e => {
   if (e.target.id === 'mpick') { $('#mpick').hidden = true; return; }
@@ -1971,6 +2082,10 @@ $('#view').addEventListener('click', async e => {
   if (b.dataset.ok) { e.stopPropagation(); const t = S.txns.get(b.dataset.ok); if (t) await saveTxn({ ...t, guess: false }); return; }
   if (b.dataset.edit) { const t = S.txns.get(b.dataset.edit); if (t) openSheet(t); return; }
   if (b.dataset.goto) { go(b.dataset.goto); return; }
+  if (b.dataset.catall) { store.set('ledger.allCats', !store.get('ledger.allCats')); render(); return; }
+  if (b.dataset.hmode) { store.set('ledger.heroMode', b.dataset.hmode); render(); return; }
+  if (b.dataset.theme) { setTheme(b.dataset.theme); render(); return; }
+  if (b.dataset.guide) { openGuide(); return; }
   if (b.dataset.stnew) { openStmt(null); return; }
   if (b.dataset.stedit) { const x = (S.stmts || []).find(y => y.id === b.dataset.stedit); if (x) openStmt(x); return; }
   if (b.dataset.payundo) { if (S.payBusy) return; if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = '确定撤销全部还款？'; return; } await undoPaid(); return; }
@@ -2072,8 +2187,80 @@ $('#toast').addEventListener('click', e => {
   const fn = toast.fn; toast.fn = null; clearTimeout(toast.t); $('#toast').hidden = true; fn();
 });
 
+/* ---------- 外观：跟随手机 / 浅色 / 深色 ---------- */
+const themeMode = () => { try { return localStorage.getItem('ledger.theme') || 'auto'; } catch { return 'auto'; } };
+function applyTheme() {
+  const m = themeMode(); let dark = m === 'dark';
+  if (m === 'auto') { try { dark = matchMedia('(prefers-color-scheme: dark)').matches; } catch {} }
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = dark ? '#141110' : '#f7f4f0';
+}
+function setTheme(m) { try { localStorage.setItem('ledger.theme', m); } catch {} applyTheme(); }
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); } catch {}
+applyTheme();
+
+/* ---------- 新手引导：第一次用、账本还是空的时候出现（设置里也可以重看） ---------- */
+const guideBox = document.body.appendChild(Object.assign(document.createElement('div'), { className: 'guide', hidden: true }));
+const FIXED_CATS = ['other', 'income', 'topup'];
+const SUGGEST = ['油钱', '停车', '咖啡', '网购', '房租', '水电', '话费', '孩子', '宠物', '保险', '娱乐', '旅行'];
+let gd = null;
+function openGuide() {
+  const s = settings(), a0 = s.accounts[0] || {};
+  gd = { step: 1, cats: new Set(s.cats.map(c => c.id)), extra: [], total: budget().total || '', acct: a0.name || '现金', opening: a0.opening || '' };
+  drawGuide(); guideBox.hidden = false; guideBox.scrollTop = 0;
+}
+const gChip = (k, n, on, col) => `<button class="chip" data-gk="${esc(k)}" aria-pressed="${on}">${col ? `<span class="dot" style="background:${color(col)}"></span>` : '<span aria-hidden="true">＋</span>'}${esc(n.split(' / ')[0])}</button>`;
+function drawGuide() {
+  const s = settings(), d = gd;
+  let body = '';
+  if (d.step === 1) body = `<h2>欢迎使用记账</h2><p class="note">先选你平常会花钱的分类。之后随时可以在「设置」里改。</p>
+    <div class="chips">${s.cats.filter(c => !FIXED_CATS.includes(c.id) && c.kind !== 'transfer').map(c => gChip(c.id, c.name, d.cats.has(c.id), c.color)).join('')}
+    ${SUGGEST.filter(n => !s.cats.some(c => c.name.includes(n))).map(n => gChip('new:' + n, n, d.extra.includes(n))).join('')}</div>
+    <div class="addline"><input id="g-new" placeholder="自己加一个，例如：健身" aria-label="自己加分类"><button class="btn" data-gadd="1">加</button></div>`;
+  else if (d.step === 2) body = `<h2>每个月大概想花多少？</h2><p class="note">填了预算，首页就能算出「今天还可以花多少」。不想设可以先跳过。</p>
+    <label class="money-in big-in"><span>RM</span><input inputmode="decimal" id="g-total" value="${d.total || ''}" placeholder="例如：1500" aria-label="每月预算"></label>`;
+  else body = `<h2>你最常用哪里付钱？</h2><p class="note">现金、TNG、银行卡都可以，之后还能再加。</p>
+    <div class="field"><label for="g-acct">账户名称</label><input id="g-acct" value="${esc(d.acct)}" placeholder="例如：现金、TNG eWallet"></div>
+    <div class="field"><label for="g-open">现在里面有多少钱（可不填）</label><input id="g-open" inputmode="decimal" value="${d.opening || ''}" placeholder="RM 0.00"></div>`;
+  guideBox.innerHTML = `<div class="guide-in" role="dialog" aria-modal="true" aria-label="新手引导">
+    <div class="steps">${[1, 2, 3].map(i => `<i class="${i <= d.step ? 'on' : ''}"></i>`).join('')}</div>
+    ${body}
+    <div class="g-btns"><button class="btn" data-gnav="${d.step === 1 ? 'skip' : 'back'}">${d.step === 1 ? '跳过' : '上一步'}</button>
+      <button class="btn primary" data-gnav="${d.step === 3 ? 'done' : 'next'}">${d.step === 3 ? '开始记账' : d.step === 2 && !d.total ? '先跳过' : '下一步'}</button></div>
+  </div>`;
+}
+function readGuide() {
+  if (gd.step === 2 && $('#g-total')) gd.total = $('#g-total').value.replace(/[^0-9.]/g, '');
+  if (gd.step === 3 && $('#g-acct')) { gd.acct = $('#g-acct').value; gd.opening = $('#g-open').value.replace(/[^0-9.\-]/g, ''); }
+}
+async function finishGuide() {
+  readGuide();
+  const s = settings(), b = budget();
+  const used = new Set([...S.txns.values()].map(t => t.cat));
+  const keep = s.cats.filter(c => FIXED_CATS.includes(c.id) || c.kind === 'transfer' || gd.cats.has(c.id) || used.has(c.id));
+  const added = gd.extra.filter(n => !keep.some(c => c.name === n)).map((n, i) => ({ id: 'c' + Date.now().toString(36) + i, name: n, color: [8, 1, 2, 3, 4, 5, 6, 7][(keep.length + i) % 8], kind: 'normal' }));
+  const cats = [...keep.filter(c => c.id !== 'other'), ...added, ...keep.filter(c => c.id === 'other')];
+  const a0 = s.accounts[0] || { id: 'cash', opening: 0 };
+  const accounts = [{ ...a0, name: gd.acct.trim() || a0.name || '现金', opening: r2(parseFloat(gd.opening) || 0) }, ...s.accounts.slice(1)];
+  store.set('ledger.onboarded', 1); guideBox.hidden = true;
+  await saveSettings({ ...s, cats, accounts, budget: { ...b, total: r2(parseFloat(gd.total) || 0) } });
+  toast('设置好了，按下面的 ＋ 记第一笔吧');
+}
+guideBox.addEventListener('input', e => { if (e.target.id === 'g-total') { gd.total = e.target.value.replace(/[^0-9.]/g, ''); const n = guideBox.querySelector('[data-gnav="next"]'); if (n) n.textContent = gd.total ? '下一步' : '先跳过'; } });
+guideBox.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !gd) return;
+  if (b.dataset.gk) { const k = b.dataset.gk; if (k.startsWith('new:')) { const n = k.slice(4); gd.extra = gd.extra.includes(n) ? gd.extra.filter(x => x !== n) : [...gd.extra, n]; } else gd.cats.has(k) ? gd.cats.delete(k) : gd.cats.add(k); drawGuide(); return; }
+  if (b.dataset.gadd) { const v = $('#g-new').value.trim(); if (v && !gd.extra.includes(v)) { gd.extra.push(v); if (!SUGGEST.includes(v)) SUGGEST.push(v); } drawGuide(); return; }
+  const nav = b.dataset.gnav; if (!nav) return;
+  readGuide();
+  if (nav === 'skip') { store.set('ledger.onboarded', 1); guideBox.hidden = true; return; }
+  if (nav === 'back') { gd.step--; drawGuide(); return; }
+  if (nav === 'next') { gd.step++; drawGuide(); return; }
+  if (nav === 'done') finishGuide();
+});
+
 /* ---------- boot ---------- */
-const APP_VER = '2026-11-18n';
+const APP_VER = '2026-11-19c';
 // 新版：先显示手机里存的上次资料（打开快），再到 Google 拿最新的
 function replayOutbox() {
   for (const { fn, args } of store.get('ledger.outbox') || []) {
