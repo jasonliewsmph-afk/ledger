@@ -479,6 +479,10 @@ html, body { overscroll-behavior-x: none; }
 .guide-in .chip { padding: 8px 14px 8px 11px; font-size: .9rem; }
 .g-btns { display: flex; gap: 10px; margin-top: 12px; }
 .g-btns .btn { flex: 1; min-height: 48px; }
+.banner.slim { padding: 8px 12px; font-size: .8rem; border-radius: 10px; margin-bottom: -6px; }
+.rc-card { padding: 10px 12px; gap: 6px; border-radius: 12px; }
+.rc-card .rc-btns .btn { padding: 6px 4px; font-size: .8rem; border-radius: 10px; }
+.rc-card .rc-amt { font-size: 1rem; }
 .cat-h { margin-bottom: -10px; } .cat-h .linkish { font-size: .8rem; }
 .theme-seg { display: flex; } .theme-seg button { flex: 1; }
 .money-in input:focus, .money-in input:focus-visible { outline: none; }
@@ -817,7 +821,9 @@ function renderHome() {
     ${hasBud ? '' : `<button class="set-budget" data-goto="budget">＋ 设个月预算，就能算出每天可以花多少</button>`}
   </section>`;
 
-  return `${cardReminderHtml()}${recurCardsHtml()}${mode === 'today' ? todayHero : `<section class="hero hero-c">
+  // 要处理的事放最上面：信用卡提醒、到期的固定开销、我猜的分类
+  const guessBar = guesses ? `<button class="banner slim" data-guesses="1"><span>有 <b>${guesses}</b> 笔分类是我猜的，点这里确认</span><span aria-hidden="true">›</span></button>` : '';
+  return `${cardReminderHtml()}${recurCardsHtml()}${guessBar}${mode === 'today' ? todayHero : `<section class="hero hero-c">
     <div class="h-head"><span class="lbl">${isPast ? '这个月花了' : '这个月到现在花了'}</span>${seg}</div>
     <div class="h-top">
       <div class="h-main">
@@ -838,8 +844,7 @@ function renderHome() {
       <span class="sub">${bud > 0 ? (over ? `<span class="over">超出 ${money(r2(v - bud))}</span>` : `${pd}<span class="rest">剩 ${money(r2(bud - v))}</span>`) : `<span>占 ${Math.round(v / total * 100)}%</span>`}</span>
     </button>`; }).join('')}</div>` : ''}
   <h2 class="sec-h"><span>最近</span><a class="linkish" href="#flow">全部流水</a></h2>
-  ${recent.length ? `<div class="rows">${recent.map(t => rowHtml(t, false)).join('')}</div>` : `<div class="empty">这个月还没有记录。点下面的 ＋ 记第一笔。</div>`}
-  ${guesses ? `<button class="banner" data-guesses="1"><span>有 <b>${guesses}</b> 笔分类是我猜的，花 1 分钟确认</span><span aria-hidden="true">›</span></button>` : ''}`;
+  ${recent.length ? `<div class="rows">${recent.map(t => rowHtml(t, false)).join('')}</div>` : `<div class="empty">这个月还没有记录。点下面的 ＋ 记第一笔。</div>`}`;
 }
 
 /* ---------- flow ---------- */
@@ -2260,7 +2265,7 @@ guideBox.addEventListener('click', e => {
 });
 
 /* ---------- boot ---------- */
-const APP_VER = '2026-11-19c';
+const APP_VER = '2026-11-19d';
 // 新版：先显示手机里存的上次资料（打开快），再到 Google 拿最新的
 function replayOutbox() {
   for (const { fn, args } of store.get('ledger.outbox') || []) {
