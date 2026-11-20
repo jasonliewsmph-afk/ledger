@@ -1,20 +1,37 @@
 {
+ "id": "/ledger/",
  "name": "记账",
  "short_name": "记账",
+ "description": "简单好用的记账 App，记录存在你自己的 Google Drive",
+ "start_url": "./",
+ "scope": "./",
  "display": "standalone",
+ "orientation": "portrait",
+ "lang": "zh-CN",
  "background_color": "#f7f4f0",
  "theme_color": "#f7f4f0",
+ "categories": [
+  "finance",
+  "productivity"
+ ],
  "icons": [
   {
    "src": "icon-192.png",
    "sizes": "192x192",
-   "type": "image/png"
+   "type": "image/png",
+   "purpose": "any"
   },
   {
    "src": "icon-512.png",
    "sizes": "512x512",
    "type": "image/png",
-   "purpose": "any maskable"
+   "purpose": "any"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
   }
  ]
 }
