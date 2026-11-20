@@ -479,6 +479,28 @@ html, body { overscroll-behavior-x: none; }
 .guide-in .chip { padding: 8px 14px 8px 11px; font-size: .9rem; }
 .g-btns { display: flex; gap: 10px; margin-top: 12px; }
 .g-btns .btn { flex: 1; min-height: 48px; }
+/* 新手引导第 4 步：手势小技巧（小动画示范） */
+.tips { display: grid; gap: 10px; }
+.gtip { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px 10px 10px; }
+.gtip svg { width: 64px; height: 64px; display: block; border-radius: 12px; background: var(--bg); overflow: hidden; }
+.gtip b { display: block; font-size: .95rem; margin-bottom: 2px; } .gtip span { font-size: .84rem; color: var(--ink-2); line-height: 1.45; }
+.gtip .t-acc { fill: var(--accent); } .gtip .t-soft { fill: none; stroke: var(--accent); }
+.gtip .t-row { fill: var(--surface); stroke: var(--line); } .gtip .t-ink { fill: var(--ink-2); } .gtip .t-red { fill: #d0574a; } .gtip .t-tan { fill: var(--accent); opacity: .55; }
+.gtip .t-f { fill: var(--ink); opacity: 0; }
+.gtip .t-fan { opacity: 0; transform-origin: 32px 48px; }
+@keyframes tFanF { 0% { opacity: 0; transform: translate(0, 0); } 12%, 40% { opacity: .45; transform: translate(0, 0); } 75% { opacity: .45; transform: translate(9px, -26px); } 90%, 100% { opacity: 0; transform: translate(9px, -26px); } }
+@keyframes tFan { 0%, 30% { opacity: 0; transform: scale(.6); } 42%, 88% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
+@keyframes tSlide { 0%, 20% { transform: translateX(0); } 50%, 80% { transform: translateX(-22px); } 100% { transform: translateX(0); } }
+@keyframes tSlideF { 0%, 10% { opacity: 0; transform: translateX(0); } 20% { opacity: .45; transform: translateX(0); } 50% { opacity: .45; transform: translateX(-22px); } 60%, 100% { opacity: 0; transform: translateX(-22px); } }
+@keyframes tHoldF { 0%, 10% { opacity: 0; r: 4px; } 20%, 45% { opacity: .45; r: 4px; } 50% { opacity: .3; r: 7px; } 80% { opacity: .3; r: 7px; } 90%, 100% { opacity: 0; } }
+@keyframes tMenu { 0%, 48% { opacity: 0; transform: translateY(4px) scale(.9); } 56%, 88% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+@keyframes tPage { 0%, 25% { transform: translateX(0); } 55%, 100% { transform: translateX(-46px); } }
+@keyframes tPageF { 0%, 15% { opacity: 0; transform: translateX(10px); } 25% { opacity: .45; transform: translateX(10px); } 55% { opacity: .45; transform: translateX(-14px); } 65%, 100% { opacity: 0; transform: translateX(-14px); } }
+.gtip .a-fanf { animation: tFanF 2.6s infinite; } .gtip .a-fan { animation: tFan 2.6s infinite; }
+.gtip .a-slide { animation: tSlide 2.6s infinite; } .gtip .a-slidef { animation: tSlideF 2.6s infinite; }
+.gtip .a-holdf { animation: tHoldF 2.6s infinite; } .gtip .t-menu { opacity: 0; transform-origin: 32px 22px; animation: tMenu 2.6s infinite; }
+.gtip .a-page { animation: tPage 2.6s infinite alternate; } .gtip .a-pagef { animation: tPageF 2.6s infinite; }
+@media (prefers-reduced-motion: reduce) { .gtip svg * { animation: none !important; } .gtip .t-fan, .gtip .t-menu { opacity: 1; } .gtip .t-f { opacity: .35; } }
 .rows { position: relative; }
 .rows .row { position: relative; z-index: 1; background: var(--surface); touch-action: pan-y; }
 .row-acts { position: absolute; left: 0; right: 0; z-index: 0; display: flex; justify-content: flex-end; overflow: hidden; }
@@ -492,7 +514,23 @@ html, body { overscroll-behavior-x: none; }
 .rc-card .rc-btns .btn { padding: 6px 4px; font-size: .8rem; border-radius: 10px; }
 .rc-card .rc-amt { font-size: 1rem; }
 .cat-h { margin-bottom: -10px; } .cat-h .linkish { font-size: .8rem; }
+html[lang="en"] .pick-row { grid-template-columns: 5.6em minmax(0, 1fr) auto; }
 .theme-seg { display: flex; } .theme-seg button { flex: 1; }
+/* 登录画面 */
+body.gate header.top, body.gate nav.bottom { display: none; }
+.gate-box { max-width: 380px; margin: 0 auto; padding: calc(8vh + env(safe-area-inset-top, 0px)) 4px 40px; display: flex; flex-direction: column; align-items: stretch; gap: 14px; text-align: center; }
+.gate-box h1 { font-size: 1.6rem; margin: 0; letter-spacing: .02em; }
+.gate-box > .note { margin: 0 0 10px; }
+.gate-ico { width: 84px; height: 84px; border-radius: 22px; align-self: center; box-shadow: 0 6px 24px rgba(60, 40, 20, .14); }
+.gbtn { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 52px; font-size: 1rem; font-weight: 600; background: #fff; color: #1f1f1f; border-color: #dadce0; }
+:root[data-theme="dark"] .gbtn { background: #131314; color: #e3e3e3; border-color: #8e918f; }
+.gate-small { font-size: .82rem; margin: -2px 0 8px; } .gate-small a { color: var(--accent); }
+.gate-lang { margin-top: 6px; }
+.linkbtn { background: none; border: 0; color: var(--ink-2); font-size: .9rem; padding: 10px; text-decoration: underline; text-underline-offset: 3px; }
+.gate-opt { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 18px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.gate-opt b { font-size: 1.05rem; } .gate-opt small { color: var(--ink-2); font-size: .85rem; line-height: 1.45; }
+.gate-opt:active { transform: scale(.985); } .gate-opt:disabled { opacity: .5; }
+.gate-busy { margin: 0; }
 .money-in input:focus, .money-in input:focus-visible { outline: none; }
 .money-in:focus-within { border-color: var(--accent); }
 .hero-c .h-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: -6px; }
@@ -574,6 +612,553 @@ main { overflow-x: clip; }
 <div class="toast" id="toast" hidden></div>
 
 <script>
+// 登录版用的 Code.gs（跟 Apps Script 里的同一份）
+window.__GAS = function (env) {
+var SpreadsheetApp = env.SpreadsheetApp, LockService = env.LockService, Utilities = env.Utilities, CalendarApp = env.CalendarApp, HtmlService = {}, ContentService = {};
+/**
+ * 我的账本 · Google 版后端
+ * 资料都存在这个 Google Sheet 的分页里：交易、分类、账户、预算、自动分类。
+ * 部署成「网页应用」后，手机打开网址就是账本 App。
+ */
+
+var SH = { tx: '交易', cat: '分类', acct: '账户', bud: '预算', rule: '自动分类', stmt: '信用卡结单', recur: '固定开销' };
+var RC_HEAD = ['ID', '名称', '收/支', '金额 (RM)', '分类ID', '分类', '账户ID', '账户', '频率', '哪天', '开始日期', '处理到'];
+var RC_FREQ = { month: '每月', week: '每周', year: '每年' };
+var RC_WD = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+var ST_HEAD = ['ID', '账户ID', '结单日', '最迟还款日', '结单金额 (RM)', '最低还款 (RM)', '已还金额 (RM)', '还款日期', '还款记录ID', '日历ID', '日历同步'];
+var TZ = 'Asia/Kuala_Lumpur';
+var TX_HEAD = ['日期', '时间', '账户', '收/支', '金额 (RM)', '分类', '商家 / 说明', '备注', '待确认', '原始描述', 'ID', '账户ID', '分类ID', '类型', '来源'];
+var TX_COLS = TX_HEAD.length;
+var REST = '__rest';
+
+/* ---------- 网页入口 ---------- */
+function doGet(e) {
+  // 网址改成「任何人都能开」之后，没带连接密码就不给看
+  if (!e || !e.parameter || !keyOk_(e.parameter.k)) {
+    return HtmlService.createHtmlOutput('<p style="font:17px/1.6 sans-serif;padding:28px">这个网址只给账本主人用。<br>请用手机主屏幕上的「我的账本」打开。</p>').setTitle('我的账本')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+  }
+  var html = loadApp_();
+  var out = html ? HtmlService.createHtmlOutput(html) : HtmlService.createHtmlOutputFromFile('Index');
+  return out.setTitle('我的账本')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
+}
+
+/* ---------- 新版 App（放在 GitHub）用的接口 ----------
+ * 手机上的新版用「网址 + 连接密码」读写这个 Sheet。密码存在「连接（勿改）」分页的 A2，
+ * 没有密码或密码不对一律拒绝。想换密码：改 A2，再用新的链接打开 App。 */
+var KEY_TAB = '连接（勿改）';
+function apiKey_() {
+  var s = ss_().getSheetByName(KEY_TAB);
+  var k = s ? String(s.getRange('A2').getDisplayValue()).trim() : '';
+  return k.length >= 24 ? k : '';
+}
+function keyOk_(k) { var real = apiKey_(); return !!real && String(k || '') === real; }
+var API_FNS = {
+  getAll: getAll, saveTxn: saveTxn, saveTxns: saveTxns, deleteTxn: deleteTxn, saveSettings: saveSettings,
+  saveStatement: saveStatement, payStatement: payStatement, undoStatementPay: undoStatementPay, deleteStatement: deleteStatement,
+  recordRecurring: recordRecurring, setRecurDone: setRecurDone
+};
+function doPost(e) {
+  var out;
+  try {
+    var req = JSON.parse(e.postData.contents);
+    if (!keyOk_(req.k)) throw new Error('连接密码不对，请用新的链接重新打开 App');
+    var fn = API_FNS[req.fn];
+    if (!fn) throw new Error('没有这个功能：' + req.fn);
+    out = { ok: true, result: fn.apply(null, req.args || []) };
+  } catch (err) {
+    out = { ok: false, error: String((err && err.message) || err) };
+  }
+  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
+}
+
+/* ---------- 自动更新：画面从「程序（勿改）」分页读取 ----------
+ * 分页每一行是画面的一段：A 名称 | B 内容 | C 校验码 (SHA-256)。
+ * 每一段都要校验码对得上、拼起来是完整的页面才会用；
+ * 否则就用 Apps Script 里的 Index 文件，所以写错也不会让 App 打不开。 */
+var APP_TAB = '程序（勿改）';
+function hex_(bytes) {
+  return bytes.map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join('');
+}
+function loadApp_() {
+  try {
+    var s = ss_().getSheetByName(APP_TAB);
+    if (!s || s.getLastRow() < 2) return '';
+    var rows = s.getRange(2, 1, s.getLastRow() - 1, 3).getValues();
+    var parts = [];
+    for (var i = 0; i < rows.length; i++) {
+      if (!rows[i][0]) continue;
+      var text = String(rows[i][1]);
+      var sum = hex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, text, Utilities.Charset.UTF_8));
+      if (sum !== String(rows[i][2]).trim().toLowerCase()) return '';
+      parts.push(text);
+    }
+    var html = parts.join('\n');
+    return /^<!DOCTYPE html>/i.test(html) && /<\/html>\s*$/i.test(html) ? html : '';
+  } catch (e) {
+    return '';
+  }
+}
+
+/* ---------- 小工具 ---------- */
+function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
+function sheet_(name) {
+  var s = ss_().getSheetByName(name);
+  if (!s) throw new Error('找不到分页「' + name + '」，请不要改分页的名字');
+  return s;
+}
+function num_(v) {
+  if (typeof v === 'number') return v;
+  var n = parseFloat(String(v || '').replace(/[^0-9.\-]/g, ''));
+  return isNaN(n) ? 0 : Math.round(n * 100) / 100;
+}
+function pad2_(n) { return (n < 10 ? '0' : '') + n; }
+function normDate_(v) {
+  var s = String(v || '').trim();
+  var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return m[1] + '-' + pad2_(+m[2]) + '-' + pad2_(+m[3]);
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); // 31/10/2026（英国 / 马来西亚格式）
+  if (m) return m[3] + '-' + pad2_(+m[2]) + '-' + pad2_(+m[1]);
+  return s;
+}
+function normTime_(v) {
+  var m = String(v || '').trim().match(/^(\d{1,2}):(\d{2})/);
+  return m ? pad2_(+m[1]) + ':' + m[2] : '';
+}
+function bodyRows_(name, cols) {
+  var s = sheet_(name);
+  var n = s.getLastRow();
+  if (n < 2) return [];
+  return s.getRange(2, 1, n - 1, cols).getDisplayValues();
+}
+function withLock_(fn) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try { return fn(); } finally { lock.releaseLock(); }
+}
+
+/* ---------- 读取 ---------- */
+function readSettings_() {
+  var cats = bodyRows_(SH.cat, 4).filter(function (r) { return r[0]; }).map(function (r) {
+    return { id: r[0], name: r[1] || r[0], color: num_(r[2]) || 5, kind: r[3] === '否' ? 'transfer' : 'normal' };
+  });
+  // ID | 名称 | 类型 | 期初余额 | 额度 | 年利率 (%) | 卡数
+  var accounts = bodyRows_(SH.acct, 7).filter(function (r) { return r[0]; }).map(function (r) {
+    var a = { id: r[0], name: r[1] || r[0], opening: num_(r[3]) };
+    if (r[2] === '信用卡') { a.kind = 'credit'; a.limit = num_(r[4]); a.rate = num_(r[5]) || 18; a.cards = Math.max(1, num_(r[6]) || 1); }
+    return a;
+  });
+  var rules = {};
+  bodyRows_(SH.rule, 2).forEach(function (r) { if (r[0] && r[1]) rules[String(r[0]).toUpperCase()] = r[1]; });
+  var bs = sheet_(SH.bud);
+  var total = num_(bs.getRange('B1').getDisplayValue());
+  var alloc = [];
+  var last = bs.getLastRow();
+  if (last >= 4) {
+    // 行ID | 分类ID | 分类 | 比例 (%) | 金额 (RM) | 按（金额 / 比例）
+    bs.getRange(4, 1, last - 3, 6).getDisplayValues().forEach(function (r) {
+      if (!r[0] || !r[1]) return;
+      var byAmt = r[5] === '金额';
+      alloc.push({ id: r[0], cat: r[1], pct: num_(r[3]), amt: num_(r[4]), by: byAmt ? 'amt' : 'pct' });
+    });
+  }
+  return { cats: cats, accounts: accounts, rules: rules, budget: { total: total, alloc: alloc }, recurring: readRecur_() };
+}
+
+/* ---------- 固定开销 ---------- */
+function recurSheet_() {
+  var s = ss_().getSheetByName(SH.recur);
+  if (!s) {
+    s = ss_().insertSheet(SH.recur);
+    s.getRange(1, 1, 1, RC_HEAD.length).setValues([RC_HEAD]);
+  }
+  return s;
+}
+function readRecur_() {
+  var s = recurSheet_();
+  var n = s.getLastRow();
+  if (n < 2) return [];
+  var inv = {}; Object.keys(RC_FREQ).forEach(function (k) { inv[RC_FREQ[k]] = k; });
+  return s.getRange(2, 1, n - 1, RC_HEAD.length).getDisplayValues().filter(function (r) { return r[0]; }).map(function (r) {
+    var freq = inv[r[8]] || 'month';
+    var day = String(r[9]).trim();
+    if (freq === 'week') day = String(Math.max(0, RC_WD.indexOf(day)));
+    if (freq === 'year') { var m = day.match(/(\d{1,2})\D+(\d{1,2})/); day = m ? pad2_(+m[1]) + '-' + pad2_(+m[2]) : '01-01'; }
+    if (freq === 'month') day = String(Math.min(31, Math.max(1, parseInt(day, 10) || 1)));
+    return { id: r[0], name: r[1], dir: r[2] === '收入' ? 'in' : 'out', amount: num_(r[3]), cat: r[4], account: r[6],
+      freq: freq, day: day, start: normDate_(r[10]), done: normDate_(r[11]) };
+  });
+}
+function recurRow_(it, catName, acctName) {
+  var day = it.freq === 'week' ? RC_WD[+it.day] || '周一' : it.freq === 'year' ? (+String(it.day).slice(0, 2)) + '月' + (+String(it.day).slice(3)) + '日' : String(it.day);
+  return [it.id, it.name || '', it.dir === 'in' ? '收入' : '支出', num_(it.amount), it.cat || '', catName[it.cat] || '', it.account || '', acctName[it.account] || '',
+    RC_FREQ[it.freq] || '每月', day, it.start || '', it.done || ''];
+}
+function writeRecur_(list, st) {
+  var s = recurSheet_();
+  var catName = {}, acctName = {};
+  (st.cats || []).forEach(function (c) { catName[c.id] = c.name; });
+  (st.accounts || []).forEach(function (a) { acctName[a.id] = a.name; });
+  var last = Math.max(s.getLastRow(), 2);
+  s.getRange(2, 1, last - 1, RC_HEAD.length).clearContent();
+  if (list.length) {
+    var rg = s.getRange(2, 1, list.length, RC_HEAD.length);
+    rg.setNumberFormat('@');
+    s.getRange(2, 4, list.length, 1).setNumberFormat('#,##0.00');
+    rg.setValues(list.map(function (it) { return recurRow_(it, catName, acctName); }));
+  }
+}
+/** 记下一次固定开销：写入交易（同一期用同一个 ID，按多下也不会重复），并把「处理到」往前推 */
+function recordRecurring(id, due, txn) {
+  return withLock_(function () {
+    var st = readSettings_();
+    var it = st.recurring.filter(function (x) { return x.id === id; })[0];
+    if (!it) throw new Error('找不到这个固定开销，请重新读取');
+    if (txn) writeTxns_([txn]);
+    if (!it.done || due > it.done) it.done = due;
+    writeRecur_(st.recurring, st);
+    return it;
+  });
+}
+/** 跳过 / 撤销：直接设定「处理到」哪一天 */
+function setRecurDone(id, done) {
+  return withLock_(function () {
+    var st = readSettings_();
+    var it = st.recurring.filter(function (x) { return x.id === id; })[0];
+    if (!it) throw new Error('找不到这个固定开销，请重新读取');
+    it.done = done || '';
+    writeRecur_(st.recurring, st);
+    return it;
+  });
+}
+
+function readTx_(settings) {
+  var s = sheet_(SH.tx);
+  var n = s.getLastRow();
+  if (n < 2) return [];
+  var v = s.getRange(2, 1, n - 1, TX_COLS).getDisplayValues();
+  var catByName = {}, acctByName = {};
+  settings.cats.forEach(function (c) { catByName[c.name] = c.id; });
+  settings.accounts.forEach(function (a) { acctByName[a.name] = a.id; });
+  var fixes = [];
+  var out = [];
+  v.forEach(function (r, i) {
+    if (!r[0] && !r[4] && !r[10]) return; // 空行
+    var id = r[10], acct = r[11], cat = r[12];
+    // 在 Sheet 里手动加的行：自动补上 ID / 账户ID / 分类ID
+    if (!id || !acct || !cat) {
+      id = id || 's' + new Date().getTime().toString(36) + i;
+      acct = acct || acctByName[r[2]] || (settings.accounts[0] && settings.accounts[0].id) || '';
+      cat = cat || catByName[r[5]] || 'other';
+      fixes.push({ row: i + 2, vals: [id, acct, cat] });
+    }
+    out.push({
+      id: id, date: normDate_(r[0]), time: normTime_(r[1]), account: acct,
+      dir: r[3] === '收入' ? 'in' : 'out', amount: num_(r[4]), cat: cat,
+      desc: r[6], note: r[7], guess: r[8] === '是', raw: r[9] || r[6], type: r[13], src: r[14]
+    });
+  });
+  fixes.forEach(function (f) { s.getRange(f.row, 11, 1, 3).setValues([f.vals]); });
+  return out;
+}
+
+/** App 打开时读取全部资料 */
+function getAll() {
+  return withLock_(function () {
+    var settings = readSettings_();
+    var stmts = readStmts_();
+    // 还没加进日历、还没还清、还没过期的结单：补加日历提醒
+    var today = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
+    stmts.forEach(function (s) {
+      var need = s.eventId ? s.calSig !== sig_(s) : (s.due >= today && s.paid < s.amount);
+      if (need) { syncEvent_(s, settings); writeStmt_(s); }
+    });
+    return { txns: readTx_(settings), settings: settings, stmts: stmts, sheetUrl: ss_().getUrl() };
+  });
+}
+
+/* ---------- 信用卡结单 + Google Calendar ---------- */
+function stmtSheet_() {
+  var s = ss_().getSheetByName(SH.stmt);
+  if (!s) {
+    s = ss_().insertSheet(SH.stmt);
+    s.getRange(1, 1, 1, ST_HEAD.length).setValues([ST_HEAD]);
+  }
+  return s;
+}
+function readStmts_() {
+  var s = stmtSheet_();
+  var n = s.getLastRow();
+  if (n < 2) return [];
+  return s.getRange(2, 1, n - 1, ST_HEAD.length).getDisplayValues().filter(function (r) { return r[0]; }).map(function (r) {
+    return { id: r[0], account: r[1], date: normDate_(r[2]), due: normDate_(r[3]), amount: num_(r[4]), min: num_(r[5]),
+      paid: num_(r[6]), paidDate: normDate_(r[7]), payTxns: r[8] ? String(r[8]).split(',') : [], eventId: r[9], calSig: r[10] || '' };
+  }).sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+}
+function writeStmt_(st) {
+  var s = stmtSheet_();
+  var n = s.getLastRow(), row = 0;
+  if (n >= 2) s.getRange(2, 1, n - 1, 1).getDisplayValues().forEach(function (r, i) { if (r[0] === st.id) row = i + 2; });
+  if (!row) row = Math.max(n, 1) + 1;
+  s.getRange(row, 1, 1, ST_HEAD.length).setNumberFormat('@');
+  s.getRange(row, 5, 1, 3).setNumberFormat('#,##0.00');
+  s.getRange(row, 1, 1, ST_HEAD.length).setValues([[st.id, st.account || '', st.date, st.due, num_(st.amount), num_(st.min),
+    num_(st.paid), st.paidDate || '', (st.payTxns || []).join(','), st.eventId || '', st.calSig || '']]);
+}
+/** 建议还款日：截止日前 4 天，碰到周末再往前推到周五（跨行转账要 1–2 个工作天） */
+function suggestDate_(due) {
+  var d = Utilities.parseDate(due + ' 12:00', TZ, 'yyyy-MM-dd HH:mm');
+  d = new Date(d.getTime() - 4 * 86400000);
+  var wd = +Utilities.formatDate(d, TZ, 'u'); // 1=周一 … 7=周日
+  if (wd === 6) d = new Date(d.getTime() - 86400000);
+  if (wd === 7) d = new Date(d.getTime() - 2 * 86400000);
+  return Utilities.formatDate(d, TZ, 'yyyy-MM-dd');
+}
+function daysBetween_(a, b) {
+  return Math.round((Utilities.parseDate(b + ' 12:00', TZ, 'yyyy-MM-dd HH:mm') - Utilities.parseDate(a + ' 12:00', TZ, 'yyyy-MM-dd HH:mm')) / 86400000);
+}
+var CAL_VER = 'v2';
+function sig_(st) { return [CAL_VER, st.due, num_(st.amount).toFixed(2), num_(st.min).toFixed(2), num_(st.paid).toFixed(2)].join('|'); }
+function rm_(n) { return 'RM' + num_(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+/** 在 Google Calendar 加入 / 更新还款提醒：截止日早上 9 点，前一天和当天各提醒一次 */
+function syncEvent_(st, settings) {
+  try {
+    var acct = (settings.accounts || []).filter(function (a) { return a.id === st.account; })[0] || { name: '信用卡', cards: 1 };
+    var cards = acct.cards || 1;
+    var fee = cards * Math.max(10, Math.min(100, num_(st.amount) / cards * 0.01));
+    var full = num_(st.paid) >= num_(st.amount);
+    var sug = suggestDate_(st.due);
+    var cal = CalendarApp.getDefaultCalendar();
+    var ev = null;
+    if (st.eventId) { try { ev = cal.getEventById(st.eventId); } catch (e) { ev = null; } }
+    var start = Utilities.parseDate(st.due + ' 09:00', TZ, 'yyyy-MM-dd HH:mm');
+    var end = new Date(start.getTime() + 30 * 60000);
+    var title = full ? ('✓ 已还清 ' + acct.name) : (acct.name + ' 还款截止');
+    var desc = full
+      ? ('已还 ' + rm_(st.paid) + (st.paidDate ? '（' + st.paidDate + '）' : '') + '\n结单日：' + st.date)
+      : ('今天是最迟还款日。\n建议：' + sug.slice(5).replace('-', '/') + ' 前还' + (num_(st.paid) >= num_(st.min) ? '剩下 ' + rm_(num_(st.amount) - num_(st.paid)) : '全额 ' + rm_(st.amount)) + '（跨行转账要 1–2 个工作天）' +
+         '\n全额：' + rm_(st.amount) + '（还清不会有利息）\n最低：' + rm_(st.min) + '\n没还最低大约罚 ' + rm_(fee) +
+         (num_(st.paid) > 0 ? '\n已还：' + rm_(st.paid) : '') + '\n结单日：' + st.date + '\n（由「我的账本」自动建立）');
+    if (!ev) ev = cal.createEvent(title, start, end, { description: desc });
+    else { ev.setTitle(title); ev.setTime(start, end); ev.setDescription(desc); }
+    ev.removeAllReminders();
+    if (!full) {
+      ev.addPopupReminder(0); ev.addPopupReminder(24 * 60);
+      var early = daysBetween_(sug, st.due);
+      if (early > 1 && early <= 28) ev.addPopupReminder(early * 24 * 60); // 建议还款日早上 9 点
+    }
+    st.eventId = ev.getId();
+    st.calSig = sig_(st);
+    st.calOk = true; st.calMsg = '';
+  } catch (e) {
+    st.calOk = false; st.calMsg = String((e && e.message) || e);
+  }
+  return st;
+}
+/** 新增或修改结单（含还款状态），并同步日历 */
+function saveStatement(st) {
+  return withLock_(function () {
+    if (!st || !st.id) throw new Error('结单缺少 ID');
+    syncEvent_(st, readSettings_());
+    writeStmt_(st);
+    return st;
+  });
+}
+function findStmt_(id) {
+  var list = readStmts_();
+  for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+  throw new Error('找不到这期结单，请重新读取');
+}
+/** 记一笔还款（一次只处理一笔，按多下也不会重复） */
+function payStatement(id, amount, txn) {
+  return withLock_(function () {
+    var st = findStmt_(id);
+    if (txn && st.payTxns.indexOf(txn.id) >= 0) return st;          // 同一笔已经记过
+    if (num_(st.paid) >= num_(st.amount)) throw new Error('这期已经还清了，不用再记');
+    amount = num_(amount);
+    if (!(amount > 0)) throw new Error('还款金额要大于 0');
+    txn.amount = amount;
+    writeTxns_([txn]);
+    st.paid = Math.round((num_(st.paid) + amount) * 100) / 100;
+    st.paidDate = txn.date;
+    st.payTxns = st.payTxns.concat([txn.id]);
+    syncEvent_(st, readSettings_());
+    writeStmt_(st);
+    return st;
+  });
+}
+/** 撤销这期全部还款记录 */
+function undoStatementPay(id) {
+  return withLock_(function () {
+    var st = findStmt_(id);
+    var s = sheet_(SH.tx);
+    var rows = idRows_(s);
+    st.payTxns.map(function (t) { return rows[t]; }).filter(Boolean).sort(function (a, b) { return b - a; })
+      .forEach(function (r) { s.deleteRow(r); });
+    st.paid = 0; st.paidDate = ''; st.payTxns = [];
+    syncEvent_(st, readSettings_());
+    writeStmt_(st);
+    return st;
+  });
+}
+/** 删除结单和它的日历提醒 */
+function deleteStatement(id) {
+  return withLock_(function () {
+    var s = stmtSheet_();
+    var n = s.getLastRow();
+    if (n < 2) return true;
+    var rows = s.getRange(2, 1, n - 1, ST_HEAD.length).getDisplayValues();
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i][0] !== id) continue;
+      if (rows[i][9]) { try { var ev = CalendarApp.getDefaultCalendar().getEventById(rows[i][9]); if (ev) ev.deleteEvent(); } catch (e) {} }
+      s.deleteRow(i + 2);
+      break;
+    }
+    return true;
+  });
+}
+/** 第一次用：在 Apps Script 里选这个函数按「执行」，允许使用 Google Calendar */
+function authorizeCalendar() {
+  return '已允许使用日历：' + CalendarApp.getDefaultCalendar().getName();
+}
+
+/* ---------- 写入交易 ---------- */
+function txRow_(t, names) {
+  return [
+    t.date || '', t.time || '', names.acct[t.account] || t.account || '', t.dir === 'in' ? '收入' : '支出',
+    num_(t.amount), names.cat[t.cat] || t.cat || '', t.desc || '', t.note || '', t.guess ? '是' : '',
+    t.raw || '', t.id, t.account || '', t.cat || '', t.type || '', t.src || ''
+  ];
+}
+function names_() {
+  var st = readSettings_();
+  var n = { cat: {}, acct: {} };
+  st.cats.forEach(function (c) { n.cat[c.id] = c.name; });
+  st.accounts.forEach(function (a) { n.acct[a.id] = a.name; });
+  return n;
+}
+function idRows_(s) {
+  var n = s.getLastRow();
+  var map = {};
+  if (n < 2) return map;
+  s.getRange(2, 11, n - 1, 1).getDisplayValues().forEach(function (r, i) { if (r[0]) map[r[0]] = i + 2; });
+  return map;
+}
+function writeTxns_(list) {
+  var s = sheet_(SH.tx);
+  var names = names_();
+  var rows = idRows_(s);
+  list.forEach(function (t) {
+    if (!t || !t.id) throw new Error('记录缺少 ID');
+    var row = rows[t.id];
+    if (!row) { row = s.getLastRow() + 1; rows[t.id] = row; }
+    s.getRange(row, 1, 1, 2).setNumberFormat('@');
+    s.getRange(row, 8, 1, 8).setNumberFormat('@');
+    s.getRange(row, 5).setNumberFormat('#,##0.00');
+    s.getRange(row, 1, 1, TX_COLS).setValues([txRow_(t, names)]);
+  });
+  return true;
+}
+/** 新增或修改一笔 */
+function saveTxn(t) { return withLock_(function () { return writeTxns_([t]); }); }
+/** 一次改多笔（例如同一商家一起改分类） */
+function saveTxns(list) { return withLock_(function () { return writeTxns_(list || []); }); }
+/** 删除一笔 */
+function deleteTxn(id) {
+  return withLock_(function () {
+    var s = sheet_(SH.tx);
+    var row = idRows_(s)[id];
+    if (row) s.deleteRow(row);
+    return true;
+  });
+}
+
+/* ---------- 写入设定 ---------- */
+function rewrite_(name, startRow, cols, rows) {
+  var s = sheet_(name);
+  var last = Math.max(s.getLastRow(), startRow);
+  s.getRange(startRow, 1, last - startRow + 1, cols).clearContent();
+  if (rows.length) s.getRange(startRow, 1, rows.length, cols).setValues(rows);
+}
+/** 保存分类、账户、预算、自动分类，并更新交易表里显示的分类 / 账户名称 */
+function saveSettings(st) {
+  return withLock_(function () {
+    var cats = (st.cats || []).map(function (c) { return [c.id, c.name, c.color || 5, c.kind === 'transfer' ? '否' : '是']; });
+    var accts = (st.accounts || []).map(function (a) {
+      var credit = a.kind === 'credit';
+      return [a.id, a.name, credit ? '信用卡' : '钱包 / 银行', num_(a.opening), credit ? num_(a.limit) : '', credit ? num_(a.rate) : '', credit ? (a.cards || 1) : ''];
+    });
+    var catName = {}; (st.cats || []).forEach(function (c) { catName[c.id] = c.name; });
+    var rules = Object.keys(st.rules || {}).sort().map(function (k) { return [k, st.rules[k], catName[st.rules[k]] || '']; });
+    var b = st.budget || {};
+    var total = num_(b.total);
+    var alloc = (b.alloc || []).map(function (r) {
+      var byAmt = r.by === 'amt';
+      var amt = byAmt ? num_(r.amt) : Math.round(total * num_(r.pct)) / 100;
+      var pct = byAmt ? (total > 0 ? Math.round(amt / total * 10000) / 100 : 0) : num_(r.pct);
+      return [r.id, r.cat, r.cat === REST ? '其他（没单独分配的分类）' : (catName[r.cat] || r.cat), pct, amt, byAmt ? '金额' : '比例'];
+    });
+    rewrite_(SH.cat, 2, 4, cats);
+    sheet_(SH.acct).getRange(1, 1, 1, 7).setValues([['ID', '名称', '类型', '期初余额 (RM)', '额度 (RM)', '年利率 (%)', '卡数']]);
+    rewrite_(SH.acct, 2, 7, accts);
+    rewrite_(SH.rule, 2, 3, rules);
+    var bs = sheet_(SH.bud);
+    bs.getRange('B1').setValue(total);
+    bs.getRange(3, 1, 1, 6).setValues([['行ID', '分类ID', '分类', '比例 (%)', '金额 (RM)', '按']]);
+    rewrite_(SH.bud, 4, 6, alloc);
+    if (Array.isArray(st.recurring)) {   // 旧版画面没有这项，就不要动
+      // 「处理到」以 Sheet 上较新的为准：别的手机 / 旧画面存设定时，不会把已经记下的又变回没处理
+      var cur = {}; readRecur_().forEach(function (x) { cur[x.id] = x.done; });
+      st.recurring.forEach(function (it) { if (cur[it.id] && (!it.done || cur[it.id] > it.done)) it.done = cur[it.id]; });
+      writeRecur_(st.recurring, st);
+    }
+
+    // 交易表：按 ID 更新显示用的账户名称、分类名称
+    var s = sheet_(SH.tx);
+    var n = s.getLastRow();
+    if (n >= 2) {
+      var acctName = {}; (st.accounts || []).forEach(function (a) { acctName[a.id] = a.name; });
+      var ids = s.getRange(2, 12, n - 1, 2).getDisplayValues();
+      var c = s.getRange(2, 3, n - 1, 1).getDisplayValues();
+      var f = s.getRange(2, 6, n - 1, 1).getDisplayValues();
+      var changed = false;
+      ids.forEach(function (r, i) {
+        if (acctName[r[0]] && c[i][0] !== acctName[r[0]]) { c[i][0] = acctName[r[0]]; changed = true; }
+        if (catName[r[1]] && f[i][0] !== catName[r[1]]) { f[i][0] = catName[r[1]]; changed = true; }
+      });
+      if (changed) {
+        s.getRange(2, 3, n - 1, 1).setValues(c);
+        s.getRange(2, 6, n - 1, 1).setValues(f);
+      }
+    }
+    return true;
+  });
+}
+
+/* ---- 只在登录版用 ---- */
+readStmts_ = function () { return []; };   // 没有信用卡功能
+/** 新账本 / 旧账本缺的分页：补上分页和标题行；新账本再写入默认分类、账户 */
+function prepare_(st) {
+  var ss = ss_();
+  [[SH.tx, TX_HEAD], [SH.cat, ['ID', '名称', '颜色编号', '计入收支']], [SH.acct, ['ID', '名称', '类型', '期初余额 (RM)', '额度 (RM)', '年利率 (%)', '卡数']],
+   [SH.rule, ['商家（大写）', '分类ID', '分类']], [SH.recur, RC_HEAD]].forEach(function (x) {
+    var s = ss.getSheetByName(x[0]) || ss.insertSheet(x[0]);
+    if (s.getLastRow() === 0) s.getRange(1, 1, 1, x[1].length).setValues([x[1]]);
+  });
+  var b = ss.getSheetByName(SH.bud) || ss.insertSheet(SH.bud);
+  if (b.getLastRow() === 0) {
+    b.getRange(1, 1, 1, 4).setValues([['本月预算 (RM)', 0, '', '每个月沿用同一个预算']]);
+    b.getRange(3, 1, 1, 6).setValues([['行ID', '分类ID', '分类', '比例 (%)', '金额 (RM)', '按']]);
+  }
+  if (st) saveSettings(st);
+  return true;
+}
+return { getAll: getAll, saveTxn: saveTxn, saveTxns: saveTxns, deleteTxn: deleteTxn, saveSettings: saveSettings,
+  recordRecurring: recordRecurring, setRecurDone: setRecurDone, prepare_: prepare_ };
+};
+</script>
+<script>
 (() => {
 const DEFAULT_SETTINGS = {
   cats: [
@@ -634,13 +1219,169 @@ function readConn() {
     const h = new URLSearchParams(location.hash.slice(1)), u = h.get('u'), k = h.get('k');
     if (u && k && /^https:\/\/script\.google\.com\//.test(u)) { store.set('ledger.conn', { u, k }); return { u, k }; }
   } catch {}
-  const c = store.get('ledger.conn'); return c && c.u && c.k ? c : null;
+  const c = store.get('ledger.conn'); return c && (c.g || (c.u && c.k)) ? c : null;
 }
 let CONN = WEB ? readConn() : null;
+
+/* ---------- 用 Google 登录（给朋友用的版本）----------
+ * 不用 Apps Script：App 直接用 Google Sheets API 读写用户自己 Drive 里的 Sheet，
+ * 规则跟 Code.gs 一模一样（同一份程序在手机里跑），所以旧版的 Sheet 可以直接接着用。
+ * 只拿 drive.file 权限：只看得到这个 App 建立的、或用户自己选给它的文件。没有信用卡功能。 */
+const G = { client: '72413566444-kb3o4p3dqbehd8ddovi9o7pjhl21sp3s.apps.googleusercontent.com', key: 'AIzaSyC8SfgmSHnYFTK6lUAqV7bhe6SiW-XZvDQ', app: '72413566444',
+  scope: 'openid email https://www.googleapis.com/auth/drive.file', api: 'https://sheets.googleapis.com/v4/spreadsheets' };
+const isG = () => !!(WEB && CONN && CONN.g);
+const gTok = () => { const t = store.get('ledger.gtok'); return t && t.t && t.exp > Date.now() + 60000 ? t.t : null; };
+const gHome = () => location.origin + location.pathname.replace(/index\.html$/, '');
+const authErr = () => Object.assign(new Error('Google 登录过期了'), { offline: true, auth: true });
+// 去 Google 登录，登录完会回到 App（网址 # 后面带着通行证）。prompt=none 是不出画面、悄悄续期
+function gLogin(prompt, hint) {
+  const st = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  store.set('ledger.gstate', { st, silent: prompt === 'none' });
+  if (prompt === 'none') store.set('ledger.gtry', Date.now());
+  const q = new URLSearchParams({ client_id: G.client, redirect_uri: gHome(), response_type: 'token', scope: G.scope, include_granted_scopes: 'true', state: st });
+  if (prompt) q.set('prompt', prompt);
+  if (hint) q.set('login_hint', hint);
+  location.assign('https://accounts.google.com/o/oauth2/v2/auth?' + q);
+}
+function gReturn() {
+  const h = new URLSearchParams(location.hash.slice(1)), st = h.get('state');
+  if (!st || !(h.get('access_token') || h.get('error'))) return null;
+  history.replaceState(null, '', location.pathname + location.search);
+  const want = store.get('ledger.gstate') || {};
+  if (st !== want.st) return null;                     // 不是这个 App 发出去的，不收
+  store.set('ledger.gstate', null);
+  if (h.get('access_token')) {
+    store.set('ledger.gtok', { t: h.get('access_token'), exp: Date.now() + (+h.get('expires_in') || 3600) * 1000 });
+    store.set('ledger.gfail', 0); return { ok: true };
+  }
+  if (want.silent) store.set('ledger.gfail', Date.now());
+  return { ok: false, silent: want.silent, error: h.get('error') };
+}
+// 通行证过期（一小时）：有网络就悄悄去 Google 续一下再回来；悄悄续失败过的话 10 分钟内不再试，改成让用户按
+const gCanSilent = () => navigator.onLine !== false && Date.now() - (store.get('ledger.gfail') || 0) > 600000 && Date.now() - (store.get('ledger.gtry') || 0) > 120000;
+async function gFetch(url, opt = {}) {
+  const tok = gTok(); if (!tok) throw authErr();
+  let r;
+  try { r = await fetch(url, { ...opt, headers: { Authorization: 'Bearer ' + tok, ...(opt.body ? { 'Content-Type': 'application/json' } : {}) } }); }
+  catch { throw Object.assign(new Error(navigator.onLine === false ? '没有网络' : '连不上 Google'), { offline: true }); }
+  if (r.status === 401) { store.set('ledger.gtok', null); throw authErr(); }
+  let d = null; try { d = await r.json(); } catch {}
+  if (!r.ok) {
+    if (r.status === 403 || r.status === 404) throw new Error('打不开这个 Google Sheet（可能被删除了，或要重新选一次）');
+    throw new Error(`Google 出错了（${r.status}）${d && d.error && d.error.message ? '：' + d.error.message : ''}`);
+  }
+  return d;
+}
+// 手机里的「Sheet」：读进来的格子 + 记下每一个改动，最后一次写回 Google（全部成功或全部不写）
+const GS = (() => {
+  const TABS = ['交易', '分类', '账户', '预算', '自动分类', '固定开销'];
+  let meta = null, chain = Promise.resolve();
+  const colNum = s => [...s].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
+  const show = (v, f) => typeof v === 'number' ? (f === '#,##0.00' ? v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : String(v)) : String(v ?? '');
+  const cellOf = v => typeof v === 'number' && isFinite(v) ? { userEnteredValue: { numberValue: v } } : v === '' || v == null ? {} : { userEnteredValue: { stringValue: String(v) } };
+  class Sheet {
+    constructor(ops, t, rows) { this.ops = ops; this.t = t; this.rows = rows.map(r => r.map(v => String(v ?? ''))); this.fmt = {}; }
+    getLastRow() { for (let i = this.rows.length - 1; i >= 0; i--) if (this.rows[i].some(c => c !== '')) return i + 1; return 0; }
+    getLastColumn() { return Math.max(0, ...this.rows.map(r => r.length)); }
+    cell(r, c) { return (this.rows[r - 1] || [])[c - 1] ?? ''; }
+    put(r, c, v) { while (this.rows.length < r) this.rows.push([]); const row = this.rows[r - 1]; while (row.length < c) row.push(''); row[c - 1] = v; }
+    grow(r, c) {
+      if (r > this.t.rows) { const n = r - this.t.rows + 200; this.ops.push({ appendDimension: { sheetId: this.t.id, dimension: 'ROWS', length: n } }); this.t.rows += n; }
+      if (c > this.t.cols) { const n = c - this.t.cols; this.ops.push({ appendDimension: { sheetId: this.t.id, dimension: 'COLUMNS', length: n } }); this.t.cols += n; }
+    }
+    getRange(a, b, nr, nc) {
+      if (typeof a === 'string') { const m = a.match(/^([A-Z]+)(\d+)$/); return new Range(this, +m[2], colNum(m[1]), 1, 1); }
+      return new Range(this, a, b, nr || 1, nc || 1);
+    }
+    deleteRow(r) {
+      this.rows.splice(r - 1, 1); this.t.rows--;
+      this.ops.push({ deleteDimension: { range: { sheetId: this.t.id, dimension: 'ROWS', startIndex: r - 1, endIndex: r } } });
+    }
+  }
+  class Range {
+    constructor(s, r, c, nr, nc) { Object.assign(this, { s, r, c, nr, nc }); }
+    grid(nr = this.nr) { return { sheetId: this.s.t.id, startRowIndex: this.r - 1, endRowIndex: this.r - 1 + nr, startColumnIndex: this.c - 1, endColumnIndex: this.c - 1 + this.nc }; }
+    getDisplayValues() { return Array.from({ length: this.nr }, (_, i) => Array.from({ length: this.nc }, (_, j) => this.s.cell(this.r + i, this.c + j))); }
+    getValues() { return this.getDisplayValues(); }
+    getDisplayValue() { return this.s.cell(this.r, this.c); }
+    setValues(v) {
+      if (v.length !== this.nr || v.some(r => r.length !== this.nc)) throw new Error('setValues size mismatch');
+      this.s.grow(this.r + this.nr - 1, this.c + this.nc - 1);
+      v.forEach((row, i) => row.forEach((x, j) => this.s.put(this.r + i, this.c + j, show(x, this.s.fmt[this.c + j]))));
+      this.s.ops.push({ updateCells: { range: this.grid(), rows: v.map(row => ({ values: row.map(cellOf) })), fields: 'userEnteredValue' } });
+      return this;
+    }
+    setValue(x) { return this.setValues([[x]]); }
+    setNumberFormat(f) {
+      for (let j = 0; j < this.nc; j++) this.s.fmt[this.c + j] = f;
+      this.s.grow(this.r + this.nr - 1, this.c + this.nc - 1);
+      this.s.ops.push({ repeatCell: { range: this.grid(), cell: { userEnteredFormat: { numberFormat: f === '@' ? { type: 'TEXT' } : { type: 'NUMBER', pattern: f } } }, fields: 'userEnteredFormat.numberFormat' } });
+      return this;
+    }
+    clearContent() {
+      for (let i = 0; i < this.nr; i++) for (let j = 0; j < this.nc; j++) if (this.s.rows[this.r + i - 1]) this.s.put(this.r + i, this.c + j, '');
+      const nr = Math.min(this.nr, this.s.t.rows - this.r + 1);
+      if (nr > 0) this.s.ops.push({ updateCells: { range: this.grid(nr), fields: 'userEnteredValue' } });
+      return this;
+    }
+  }
+  const pad = n => String(n).padStart(2, '0');
+  const klDate = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  const Utilities = {
+    formatDate: (d, tz, f) => f === 'u' ? String(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kuala_Lumpur', weekday: 'short' }).format(d)) + 1) : klDate(d),
+    parseDate: s => new Date(s.replace(' ', 'T') + ':00+08:00')
+  };
+  async function loadMeta(id) {
+    const d = await gFetch(`${G.api}/${id}?fields=properties.title,sheets.properties(sheetId,title,gridProperties(rowCount,columnCount))`);
+    const tabs = {};
+    (d.sheets || []).forEach(({ properties: p }) => { tabs[p.title] = { id: p.sheetId, rows: (p.gridProperties || {}).rowCount || 1000, cols: (p.gridProperties || {}).columnCount || 26 }; });
+    return (meta = { id, title: (d.properties || {}).title || '', tabs });
+  }
+  async function run1(id, fn, args) {
+    const m = meta && meta.id === id ? meta : await loadMeta(id);
+    const names = TABS.filter(n => m.tabs[n]);
+    const vals = names.length ? (await gFetch(`${G.api}/${id}/values:batchGet?${names.map(n => 'ranges=' + encodeURIComponent(`'${n}'`)).join('&')}&valueRenderOption=FORMATTED_VALUE&majorDimension=ROWS`)).valueRanges : [];
+    const ops = [], sheets = {};
+    names.forEach((n, i) => { sheets[n] = new Sheet(ops, m.tabs[n], (vals[i] && vals[i].values) || []); });
+    const ss = {
+      getSheetByName: n => sheets[n] || null,
+      insertSheet: n => { const t = { id: 1e8 + Math.floor(Math.random() * 9e8), rows: 1000, cols: 26 }; m.tabs[n] = t;
+        ops.push({ addSheet: { properties: { sheetId: t.id, title: n, gridProperties: { rowCount: t.rows, columnCount: t.cols } } } }); return (sheets[n] = new Sheet(ops, t, [])); },
+      getUrl: () => `https://docs.google.com/spreadsheets/d/${id}/edit`
+    };
+    const code = window.__GAS({ SpreadsheetApp: { getActiveSpreadsheet: () => ss }, LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) }, Utilities,
+      CalendarApp: { getDefaultCalendar() { throw new Error('这个版本没有日历功能'); } } });
+    if (!code[fn]) throw new Error('没有这个功能：' + fn);
+    const res = code[fn](...JSON.parse(JSON.stringify(args || [])));
+    if (ops.length) { try { await gFetch(`${G.api}/${id}:batchUpdate`, { method: 'POST', body: JSON.stringify({ requests: ops }) }); } catch (e) { meta = null; throw e; } }
+    return JSON.parse(JSON.stringify(res ?? null));
+  }
+  function run(id, fn, args) { const p = chain.then(() => run1(id, fn, args)); chain = p.catch(() => {}); return p; }
+  return { run, loadMeta, forget: () => { meta = null; } };
+})();
+// 新用户：在他的 Google Drive 建一个新的「记账」Sheet（分页和旧版一样）
+async function gCreate() {
+  const d = await gFetch(G.api, { method: 'POST', body: JSON.stringify({ properties: { title: LANG === 'en' ? 'Ledger' : '记账', timeZone: 'Asia/Kuala_Lumpur' },
+    sheets: ['交易', '分类', '账户', '预算', '自动分类', '固定开销'].map(title => ({ properties: { title } })) }) });
+  const en = LANG === 'en';
+  const st = { ...DEFAULT_SETTINGS, cats: DEFAULT_SETTINGS.cats.map(c => ({ ...c, name: en ? tr(c.name) : c.name })),
+    accounts: [{ id: 'cash', name: en ? 'Cash' : '现金', opening: 0 }], budget: { total: 0, alloc: [] }, recurring: [] };
+  await GS.run(d.spreadsheetId, 'prepare_', [st]);
+  return { id: d.spreadsheetId, title: (d.properties || {}).title || '' };
+}
+// 选了旧的 Sheet：检查是不是记账的账本，缺的分页补上
+async function gUse(doc) {
+  GS.forget();
+  const m = await GS.loadMeta(doc.id);
+  if (!m.tabs['交易']) throw new Error('这个 Sheet 不是记账的账本（找不到「交易」分页）');
+  await GS.run(doc.id, 'prepare_', [null]);
+  return { id: doc.id, title: m.title || doc.name || '' };
+}
 // 没网络时先存在手机里，有网络再一笔一笔补上去（只限这几种）
 const OUTBOXABLE = ['saveTxn', 'saveTxns', 'deleteTxn', 'saveSettings'];
 async function webCall(fn, args) {
   if (!CONN) throw new Error('还没连接账本');
+  if (CONN.g) { if (!CONN.id) throw new Error('还没选账本'); return GS.run(CONN.id, fn, args); }
   let r;
   try { r = await fetch(CONN.u, { method: 'POST', body: JSON.stringify({ k: CONN.k, fn, args }) }); }
   catch { const e = new Error(navigator.onLine === false ? '没有网络' : '连不上 Google 的账本（没有网络，或部署的「谁可以访问」不是「任何人」）'); e.offline = true; throw e; }
@@ -662,7 +1403,11 @@ async function webApi(fn, args) {
   catch (e) {
     if (!e.offline || !OUTBOXABLE.includes(fn)) throw e;
     store.set('ledger.outbox', [...(store.get('ledger.outbox') || []), { fn, args }]);
-    toast('没有网络，先存在手机里，有网络会自动同步');
+    if (e.auth) {
+      toast('Google 登录过期了，先存在手机里', { label: '重新登录', fn: () => gLogin('', CONN.email) });
+      const bar = $('#g-relogin span'); if (bar) bar.textContent = `Google 登录过期了，还有 ${(store.get('ledger.outbox') || []).length} 项没同步`;
+    }
+    else toast('没有网络，先存在手机里，有网络会自动同步');
     return null;
   }
 }
@@ -707,9 +1452,19 @@ async function reload() {
     if (WEB) store.set('ledger.cache', d);
     applyData(d);
     S.loaded = true; lastLoad = Date.now();
+    if (!store.get('ledger.lang')) {
+      const want = settings().cats.some(c => HAN.test(c.name)) ? 'zh' : phoneLang();
+      if (want !== LANG) return setLang(want);
+      store.set('ledger.lang', want);
+    }
     render();
     if (!S.txns.size && !store.get('ledger.onboarded') && guideBox.hidden) openGuide();
   } catch (e) {
+    if (e.auth && isG()) {   // Google 通行证过期：悄悄续期（会离开一下再回来）；不行就请用户按一下
+      if (gCanSilent() && $('#overlay').hidden && guideBox.hidden) return gLogin('none', CONN.email);
+      if (!S.loaded) return showGate('relogin');
+      return toast('Google 登录过期了', { label: '重新登录', fn: () => gLogin('', CONN.email) });
+    }
     if (!S.loaded) $('#view').innerHTML = `<div class="status">读取失败：${esc(errMsg(e))}<br><br><button class="btn" onclick="location.reload()">再试一次</button></div>`;
     else toast(e.offline ? '没有网络，显示的是上次的资料' : '同步失败：' + errMsg(e));
   }
@@ -747,7 +1502,7 @@ function renderHeader() {
   const [y, m] = S.month.split('-');
   $('#m-label').innerHTML = `${y}年${+m}月 <span class="caret" aria-hidden="true">▼</span>`;
   $('#m-next').disabled = S.month >= maxMonth();
-  if ($('#wallets')) $('#wallets').innerHTML = settings().accounts.map(a => a.kind === 'credit'
+  if ($('#wallets')) $('#wallets').innerHTML = settings().accounts.map(a => a.kind === 'credit' && !isG()
     ? (() => { const s = cardStmts(a.id)[0]; const k = s ? stmtStatus(s) : null; const warn = k && k.k !== 'full' && k.k !== 'lateInt' && k.left <= 7;
         return `<button class="wallet link" data-goto="card" aria-label="${esc(a.name)} 还款"><small>${esc(a.name)} 本月刷</small><b>${money(cardSpend(a.id))}${warn ? ' <span class="due-dot">●</span>' : ''}</b></button>`; })()
     : `<div class="wallet"><small>${esc(a.name)}</small><b>${money(balance(a.id))}</b></div>`).join('');
@@ -831,7 +1586,9 @@ function renderHome() {
 
   // 要处理的事放最上面：信用卡提醒、到期的固定开销、我猜的分类
   const guessBar = guesses ? `<button class="banner slim" data-guesses="1"><span>有 <b>${guesses}</b> 笔分类是我猜的，点这里确认</span><span aria-hidden="true">›</span></button>` : '';
-  return `${cardReminderHtml()}${recurCardsHtml()}${guessBar}${mode === 'today' ? todayHero : `<section class="hero hero-c">
+  const n = (store.get('ledger.outbox') || []).length;
+  const authBar = isG() && !gTok() ? `<button class="banner" id="g-relogin"><span>Google 登录过期了${n ? `，还有 ${n} 项没同步` : ''}</span><b>重新登录 ›</b></button>` : '';
+  return `${authBar}${cardReminderHtml()}${recurCardsHtml()}${guessBar}${mode === 'today' ? todayHero : `<section class="hero hero-c">
     <div class="h-head"><span class="lbl">${isPast ? '这个月花了' : '这个月到现在花了'}</span>${seg}</div>
     <div class="h-top">
       <div class="h-main">
@@ -1040,7 +1797,7 @@ const addDays = (ymd, n) => { const d = new Date(ymd + 'T00:00:00'); d.setDate(d
 const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
 const cnDate = ymd => `${+ymd.slice(5, 7)} 月 ${+ymd.slice(8)} 日`;
 const wdOf = ymd => WD[new Date(ymd + 'T00:00:00').getDay()];
-function creditAcct() { return settings().accounts.find(a => a.kind === 'credit'); }
+function creditAcct() { return isG() ? null : settings().accounts.find(a => a.kind === 'credit'); }   // 登录版没有信用卡功能
 function cardStmts(acctId) { return (S.stmts || []).filter(s => s.account === acctId).sort((a, b) => b.date.localeCompare(a.date)); }
 function autoMin(amount, cards) { return r2(Math.max(Math.ceil(amount * 5) / 100, 25 * (cards || 1), 0)); }
 function lateFee(amount, cards) { const n = cards || 1; return r2(n * Math.max(10, Math.min(100, amount / n * 0.01))); }
@@ -1374,7 +2131,7 @@ function drawRecur() {
       <div class="field"><label for="rc-amt">金额（每次）</label><input id="rc-amt" inputmode="decimal" placeholder="RM 0.00" value="${d.amount || ''}"></div>
       <div class="field"><label for="rc-acct">从哪个账户</label><select id="rc-acct">${s.accounts.map(a => opt(a.id, esc(a.name), d.account)).join('')}</select></div>
     </div>
-    <div class="field"><label for="rc-cat">分类</label><select id="rc-cat">${cats.map(c => opt(c.id, esc(c.name), d.cat)).join('')}</select></div>
+    <div class="field"><label for="rc-cat" data-en="Category">分类</label><select id="rc-cat">${cats.map(c => opt(c.id, esc(c.name), d.cat)).join('')}</select></div>
     <div class="field"><label>多久一次</label><div class="seg rc-freq"><button data-rfreq="month" aria-pressed="${d.freq === 'month'}">每月</button><button data-rfreq="week" aria-pressed="${d.freq === 'week'}">每周</button><button data-rfreq="year" aria-pressed="${d.freq === 'year'}">每年</button></div></div>
     <div class="field"><label for="rc-day">${d.freq === 'week' ? '星期几' : d.freq === 'year' ? '哪一天' : '每月几号'}</label>${dayPick}</div>
     <p class="note" style="margin:0">下次到期：<b>${cnDateY(nx)}（${wdOf(nx)}）</b>。到期那天首页会出现提醒，按「记下」才会记账。${d.freq === 'month' && +d.day > 28 ? '没有这一天的月份会算在月底。' : ''}</p>
@@ -1498,14 +2255,17 @@ function renderSettings() {
       <span class="dot" style="background:var(--ink-2)"></span>
       <div style="display:grid;gap:4px;min-width:0">
         <input type="text" id="acct-name-${a.id}" data-acctname="${a.id}" value="${esc(a.name)}" aria-label="账户名称">
-        ${a.kind === 'credit' ? `<span class="note" style="padding-left:8px">信用卡：还款在信用卡页记，不算支出</span>` : `<label class="note" style="padding-left:8px">期初余额 RM <input inputmode="decimal" id="acct-open-${a.id}" data-acctopen="${a.id}" value="${a.opening}" style="width:7em;display:inline-block" aria-label="期初余额"></label>`}
+        ${a.kind === 'credit' && !isG() ? `<span class="note" style="padding-left:8px">信用卡：还款在信用卡页记，不算支出</span>` : `<label class="note" style="padding-left:8px">期初余额 RM <input inputmode="decimal" id="acct-open-${a.id}" data-acctopen="${a.id}" value="${a.opening}" style="width:7em;display:inline-block" aria-label="期初余额"></label>`}
       </div>
-      <b class="num">${a.kind === 'credit' ? '本月 ' + money(cardSpend(a.id)) : money(balance(a.id))}</b>
+      <b class="num">${a.kind === 'credit' && !isG() ? '本月 ' + money(cardSpend(a.id)) : money(balance(a.id))}</b>
     </div>`).join('')}
     <div class="addline"><input id="new-acct" placeholder="新账户，例如：Maybank" aria-label="新账户名称"><button class="btn primary" id="add-acct">添加</button></div>
     <p class="note" style="margin-bottom:0">期初余额是第一笔记录之前账户里有多少钱。</p>
   </section>
   ${recurSettingsHtml()}
+  <section class="card"><h2>语言 Language</h2>
+    <div class="seg theme-seg" role="group" aria-label="语言">${[['zh', '中文'], ['en', 'English']].map(([k, n]) => `<button data-lang="${k}" aria-pressed="${LANG === k}" data-notr>${n}</button>`).join('')}</div>
+  </section>
   <section class="card"><h2>外观</h2>
     <div class="seg theme-seg" role="group" aria-label="外观">${[['auto', '跟随手机'], ['light', '浅色'], ['dark', '深色']].map(([k, n]) => `<button data-theme="${k}" aria-pressed="${themeMode() === k}">${n}</button>`).join('')}</div>
   </section>
@@ -1514,6 +2274,9 @@ function renderSettings() {
     <label class="chk"><input type="checkbox" id="sfx-on" ${SFX.on ? 'checked' : ''}> 音效</label>
     <p class="note" style="margin-bottom:0">长按底部的 ＋ 不放，往上划：内圈选账户，外圈选分类，放手就去输入金额。划回中间的 ✕ 放手是取消。长按一笔记录可以修改或删除。音效走手机的媒体音量，静音模式也会响，不想要就关掉。</p>
   </section>
+  ${isG() ? `<section class="card"><h2>Google 帐号</h2>
+    <p class="note" style="margin-top:0">已登录 <b data-notr>${esc(CONN.email || '')}</b>${CONN.title ? `<br>账本：<span data-notr>${esc(CONN.title)}</span>` : ''}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="g-switch">换账本</button><button class="btn" id="g-signout">登出</button></div></section>` : ''}
   <section class="card"><h2>数据</h2>
     <p class="note" style="margin-top:0">共 ${S.txns.size} 笔记录，存在你自己的 Google Sheet。也可以直接在 Sheet 里看和改，回到 App 会自动重新读取。</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap">${S.sheetUrl ? `<a class="btn" href="${esc(S.sheetUrl)}" target="_blank" rel="noopener" style="text-decoration:none;color:var(--ink)">打开 Google Sheet</a>` : ''}<button class="btn" id="resync">重新读取</button><button class="btn" data-guide="1">新手引导</button></div>
@@ -1581,13 +2344,13 @@ function drawSheet() {
       ${sheetHead(d._new ? '补细节（可不填）' : '编辑记录')}
       <div class="pick-rows">
         <button type="button" class="pick-row" data-go="1"><span class="lbl">${d.dir === 'in' ? '收入' : '支出'}</span><b class="num">${money(evalAmt(d._amt))}</b><span class="chev" aria-hidden="true">›</span></button>
-        <button type="button" class="pick-row" data-go="2"><span class="lbl">分类</span>${c ? `<span class="pick-cat"><span class="dot" style="background:${color(c.color)}"></span>${esc(c.name)}</span>` : '<span class="pick-cat note">选分类</span>'}<span class="chev" aria-hidden="true">›</span></button>
+        <button type="button" class="pick-row" data-go="2"><span class="lbl" data-en="Category">分类</span>${c ? `<span class="pick-cat"><span class="dot" style="background:${color(c.color)}"></span>${esc(c.name)}</span>` : '<span class="pick-cat note">选分类</span>'}<span class="chev" aria-hidden="true">›</span></button>
       </div>
       ${same ? `<label class="chk"><input type="checkbox" id="e-all" ${d._applyAll !== false ? 'checked' : ''}> 同一商家的另外 ${same} 笔也改成这个分类</label>` : ''}
       <div class="field"><label for="e-desc">商家 / 说明</label><input id="e-desc" value="${esc(d.desc)}" placeholder="可不填，例如：Restoran Kem Leng"></div>
       <div class="two">
         <div class="field"><label for="e-date">日期</label><input type="date" id="e-date" value="${d.date}"></div>
-        <div class="field"><label for="e-acct">账户</label><select id="e-acct">${s.accounts.map(a => `<option value="${a.id}" ${a.id === d.account ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></div>
+        <div class="field"><label for="e-acct" data-en="Account">账户</label><select id="e-acct">${s.accounts.map(a => `<option value="${a.id}" ${a.id === d.account ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></div>
       </div>
       <div class="field"><label for="e-note">备注</label><input id="e-note" value="${esc(d.note)}" placeholder="可不填"></div>
       ${!d._new && d.type ? `<p class="note" style="margin:0">原始记录：${esc(d.type)}${d.raw ? ' · ' + esc(d.raw) : ''}${d.time ? ' · ' + esc(d.time) : ''}</p>` : ''}
@@ -1775,7 +2538,7 @@ async function moOut(el, done) {
     { duration: 200, easing: EASE, fill: 'forwards' }).finished;
 }
 const TABS = ['home', 'flow', 'budget', 'stats', 'settings', 'card'];
-function go(tab) { S.tab = TABS.includes(tab) ? tab : 'home'; render(); window.scrollTo(0, 0); }
+function go(tab) { S.tab = TABS.includes(tab) && !(tab === 'card' && isG()) ? tab : 'home'; render(); window.scrollTo(0, 0); }
 function route() { render(); }
 // 左右滑动换页（跟底部的顺序一样）；设置页 / 信用卡页往右滑回首页
 const SWIPE_TABS = ['home', 'flow', 'budget', 'stats'];
@@ -2168,6 +2931,7 @@ $('#view').addEventListener('click', async e => {
   if (b.dataset.goto) { go(b.dataset.goto); return; }
   if (b.dataset.catall) { store.set('ledger.allCats', !store.get('ledger.allCats')); render(); return; }
   if (b.dataset.hmode) { store.set('ledger.heroMode', b.dataset.hmode); render(); return; }
+  if (b.dataset.lang) { if (b.dataset.lang !== LANG) setLang(b.dataset.lang); return; }
   if (b.dataset.theme) { setTheme(b.dataset.theme); render(); return; }
   if (b.dataset.guide) { openGuide(); return; }
   if (b.dataset.stnew) { openStmt(null); return; }
@@ -2233,6 +2997,9 @@ $('#view').addEventListener('click', async e => {
     toast('账户已添加'); return;
   }
   if (b.id === 'resync') { await reload(); toast('已重新读取'); }
+  if (b.id === 'g-switch') return gSwitch();
+  if (b.id === 'g-relogin') return gLogin('', CONN.email);
+  if (b.id === 'g-signout') return gSignOut();
 });
 $('#view').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset?.edit) { e.preventDefault(); e.target.click(); } });
 
@@ -2272,6 +3039,71 @@ $('#toast').addEventListener('click', e => {
   const fn = toast.fn; toast.fn = null; clearTimeout(toast.t); $('#toast').hidden = true; fn();
 });
 
+/* ---------- 语言：中文 / English ----------
+ * 画面照旧用中文写；英文模式下，画面一出来就逐句换成英文（字典在 I18N_EN）。
+ * 用户自己打的字（分类名、商家、备注）不在字典里，就不会被翻译。 */
+const phoneLang = () => { try { return /^zh/i.test(navigator.language || '') ? 'zh' : 'en'; } catch { return 'zh'; } };
+const LANG = (() => { const v = store.get('ledger.lang'); if (v === 'zh' || v === 'en') return v; return store.get('ledger.cache') || !WEB ? 'zh' : phoneLang(); })();
+const HAN = /[\u3400-\u9fff]/;   // 有汉字才需要翻译
+const NUMS = /[+\-−]?RM[\d,]+(?:\.\d+)?|[+\-−]?\d[\d,]*(?:\.\d+)?/g;
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const WKE = { 日: 'Sun', 一: 'Mon', 二: 'Tue', 三: 'Wed', 四: 'Thu', 五: 'Fri', 六: 'Sat' };
+/*I18N*/const I18N_EN = {"首页":"Home","流水":"History","预算":"Budget","分析":"Insights","设置":"Settings","主要页面":"Main pages","记一笔":"Add expense","上个月":"Previous month","下个月":"Next month","选月份":"Pick month","上一年":"Previous year","下一年":"Next year","回到本月":"Back to this month","有记录":"has records","正在读取账本…":"Loading your ledger…","读取失败：":"Could not load: ","再试一次":"Try again","取消":"Cancel","保存":"Save","保存中…":"Saving…","删除":"Delete","修改":"Edit","确定删除？":"Delete for sure?","完成":"Done","返回":"Back","添加":"Add","加":"Add","撤销":"Undo","更新":"Update","有新版本":"New version available","跳过":"Skip","先跳过":"Skip for now","上一步":"Back","‹ 上一步":"‹ Back","下一步":"Next","‹ 返回":"‹ Back","确定":"OK","可不填":"Optional","过路费 / 交通":"Tolls / Transport","吃饭 / 饮料":"Food & Drinks","购物 / 日用品":"Shopping","朋友转账 / AA":"Friends / AA","其他":"Other","收入":"Income","充值 / 账户互转":"Top-up / Transfer","油钱":"Fuel","过路费":"Tolls","吃饭":"Food","购物":"Shopping","朋友转账":"Friends","充值":"Top-up","其他（没单独分配的分类）":"Other (categories without their own budget)","现金":"Cash","路":"T","饭":"F","买":"S","转":"A","其":"O","收":"+","充":"⇄","油":"P","今天":"Today","本月":"Month","看今天或本月":"Show today or this month","今天已花":"Spent today","今天还可以花":"Left for today","今天超出":"Over today","本月预算":"Monthly budget","已经用完":"used up","今天的额度 {0}":"Today's limit {0}","本月已花 {0}":"Month {0}","还剩 {0} 天":"{0} days left","＋ 设个月预算，就能算出每天可以花多少":"＋ Set a monthly budget to see your daily limit","设个月预算":"Set a monthly budget","这个月到现在花了":"Spent this month so far","这个月花了":"Spent this month","结余":"Net","还可以花":"Left to spend","这个月省下":"Saved this month","超出预算":"Over budget","每天约":"About","预算 {0}":"Budget {0}","已用 {0}%":"{0}% used","分类":"Categories","显示全部（{0}）":"Show all ({0})","只看前 {0} 个":"Top {0} only","显示全部":"Show all","每天约可花":"Daily","剩 {0}":"{0} left","超出 {0}":"{0} over","占 {0}%":"{0}% of total","各分类占比":"Share by category","最近":"Recent","全部流水":"See all","这个月还没有记录。点下面的 ＋ 记第一笔。":"No records this month yet. Tap ＋ below to add one.","有":"","笔分类是我猜的，点这里确认":"categories were guessed — tap to check","笔分类是我猜的":"categories were guessed","今天到期":"Due today","记下":"Record","改金额":"Edit amount","这次跳过":"Skip this time","次没处理":"not handled","每月 {0} 号":"Monthly on day {0}","每年 {0} 月 {1} 日":"Yearly on {0}/{1}","已记下":"Recorded","支出":"Expense","搜索商家、备注":"Search shop or note","搜索":"Search","全部分类":"All categories","全部账户":"All accounts","只看这些 ›":"Show only these ›","我猜的":"guessed","分类没错":"Looks right","没有符合条件的记录":"No matching records","这个月还没有记录。点下面的 ＋ 开始。":"No records this month. Tap ＋ below to start.","只搜这个月":"This month only","搜全部月份":"Search all months","全部月份找到":"Found in all months:","{0} 月找到":"Found in month {0}:","笔，支出共 {0}":"records, spent {0}","支出 {0}":"Spent {0}","收入 {0}":"Income {0}","输入这个月的预算":"Enter this month’s budget","每个月沿用同一个预算，填一次就好。":"The same budget repeats every month — set it once.","分配到各分类":"Split by category","已全部分配":"All allocated","还没分配 {0}":"{0} unallocated","还没分配":"Unallocated","已分配":"Allocated","超预算 {0}":"{0} over budget","比例":"Percent","金额":"Amount","删除这一行":"Remove this row","＋ 加一个分类":"＋ Add a category","还没有分配。点下面加一个分类。":"Nothing allocated yet. Add a category below.","已花 {0}":"Spent {0}","还剩 {0}":"{0} left","先填预算":"Set the budget first","剩 {0} 天，每天约可花":"{0} days left, daily about","超出 {0} · {1}%":"{0} over · {1}%","还剩 {0} · {1} 天":"{0} left · {1} days","已花 {0} · {1}%":"Spent {0} · {1}%","预算剩 {0}":"Budget left {0}","没单独设预算":"No budget of its own","钱花在哪":"Where it went","每天支出":"Daily spending","虚线是日均。点柱子看那天的每一笔。":"Dashed line = daily average. Tap a bar to see that day.","日均 {0}":"Daily avg {0}","平日 vs 周末":"Weekdays vs weekends","平日（{0} 天）":"Weekdays ({0} days)","周末（{0} 天）":"Weekends ({0} days)","周末每天比平日多花约 {0}%。":"Weekends cost about {0}% more per day.","平日每天比周末多花约 {0}%。":"Weekdays cost about {0}% more per day.","按账户":"By account","朋友往来":"Friends","按人算的净额。“付”是你转出去比收回来多。":"Net per person. “Paid” means you sent more than you got back.","最大的 {0} 笔":"Top {0} expenses","比上个月 · 对预算":"vs last month · vs budget","每个月一览":"Month by month","全年":"Year","每个月支出":"Monthly spending","月均 {0}":"Monthly avg {0}","全年钱花在哪":"Where it went this year","全年最大的 {0} 笔":"Top {0} of the year","每月平均":"Monthly average","合计":"Total","{0} 年支出":"{0} spending","{0} 年":"{0}","这天没有支出。":"No spending this day.","这一年还没有支出。":"No spending this year yet.","跟上月一样":"Same as last month","{0} 笔":"{0} records","{0} 笔 · 收入 {1}":"{0} records · income {1}","笔":"records","付":"Paid","收 {0}":"Got {0}","不计入收支":"Not counted","新分类名称，例如：油钱":"New category, e.g. Parking","新分类名称":"New category name","分类名称":"Category name","删除分类后，里面的记录会移到“其他”。充值、银行转去 TNG 这种只是换个口袋的钱，勾“不计入收支”。":"Deleting a category moves its records to “Other”. Tick “Not counted” for money that only moves between your own accounts, like top-ups.","账户":"Accounts","账户名称":"Account name","期初余额 RM":"Opening balance RM","期初余额":"Opening balance","新账户，例如：Maybank":"New account, e.g. Maybank","新账户名称":"New account name","期初余额是第一笔记录之前账户里有多少钱。":"Opening balance = money in the account before your first record.","本月 {0}":"This month {0}","信用卡：还款在信用卡页记，不算支出":"Credit card: record payments on the card page (not counted as spending)","固定开销":"Recurring","到期时首页会问你":"Home asks you when due","＋ 加固定开销":"＋ Add recurring","还没有。像电话费、订阅、保险、停车月票，加进来就不会忘记记。":"None yet. Add phone bills, subscriptions, insurance, parking passes — never forget to record them.","语言 Language":"Language","语言":"Language","外观":"Appearance","跟随手机":"System","浅色":"Light","深色":"Dark","信用卡":"Credit card","长按 ＋ 一划记账":"Hold ＋ and swipe","音效":"Sounds","长按底部的 ＋ 不放，往上划：内圈选账户，外圈选分类，放手就去输入金额。划回中间的 ✕ 放手是取消。长按一笔记录可以修改或删除。音效走手机的媒体音量，静音模式也会响，不想要就关掉。":"Hold the ＋ button and swipe up: inner ring picks the account, outer ring the category; let go to enter the amount. Slide back to ✕ to cancel. Long-press a record to edit or delete it. Sounds use media volume and play even in silent mode — turn them off here if you like.","数据":"Data","共 {0} 笔记录，存在你自己的 Google Sheet。也可以直接在 Sheet 里看和改，回到 App 会自动重新读取。":"{0} records, stored in your own Google Sheet. You can view and edit them there; the app reloads when you come back.","打开 Google Sheet":"Open Google Sheet","重新读取":"Reload","新手引导":"Setup guide","颜色 {0}":"Colour {0}","App 版本：{0}":"App version: {0}","主屏幕版":"Home-screen app","还有 {0} 项等网络同步":"{0} items waiting to sync","要先更新 Apps Script 里的 Code 才能用这个功能。":"Update the Code in Apps Script to use this.","输入金额":"Enter amount","选分类":"Pick a category","点一下就进下一步":"Tap one to continue","补细节（可不填）":"Details (optional)","补细节":"Details","编辑记录":"Edit record","商家 / 说明":"Shop / note","可不填，例如：Restoran Kem Leng":"Optional, e.g. Restoran Kem Leng","日期":"Date","备注":"Note","原始记录：":"Original: ","全部清除":"Clear","减":"Minus","小数点":"Decimal point","第 {0} 步，共 {1} 步":"Step {0} of {1}","同一商家的另外 {0} 笔也改成这个分类":"Also change the other {0} records from this shop","总数要大于 0":"Total must be more than 0","先输入金额":"Enter an amount first","先选分类":"Pick a category first","记好了":"Saved","已保存":"Saved","已删除":"Deleted","已恢复":"Restored","已撤销":"Undone","（没网络，有网络会自动同步）":" (offline — will sync later)","已保存，另外 {0} 笔也改了":"Saved, {0} more records changed too","没存上：":"Not saved: ","删除失败：":"Delete failed: ","同步失败：":"Sync failed: ","账本还在读取":"Still loading","设置没存上：":"Settings not saved: ","预算已保存":"Budget saved","分类已添加":"Category added","账户已添加":"Account added","已删除（以前记下的账不会删）":"Deleted (past records stay)","音效已打开":"Sounds on","音效已关掉":"Sounds off","已重新读取":"Reloaded","没有网络，先存在手机里，有网络会自动同步":"Offline — saved on this phone, will sync later","没有网络，显示的是上次的资料":"Offline — showing your last data","没有网络":"No connection","往上划":"Swipe up","放手去输入金额":"Let go to enter the amount","放手取消":"Let go to cancel","往上划选账户和分类":"Swipe up to pick account and category","滑到外圈的分类，放手":"Slide to a category, let go","外圈选分类":"outer ring: category","加固定开销":"Add recurring","修改固定开销":"Edit recurring","名称":"Name","例如：Maxis 月费、Netflix、保险":"e.g. Maxis, Netflix, insurance","金额（每次）":"Amount (each time)","从哪个账户":"From account","多久一次":"How often","每月":"Monthly","每周":"Weekly","每年":"Yearly","每月几号":"Day of month","星期几":"Day of week","哪一天":"Which day","下次到期：":"Next due: ","先填名称":"Enter a name first","先填金额":"Enter an amount first","没有这一天的月份会算在月底。":"Months without this day use the last day.","到期那天首页会出现提醒，按「记下」才会记账。":"On the due day Home shows a reminder; it is only recorded when you tap “Record”.","下次 {0} 月 {1} 日":"next {0}/{1}","已保存，下次 {0}":"Saved, next {0}","欢迎使用记账":"Welcome to Ledger","先选你平常会花钱的分类。之后随时可以在「设置」里改。":"Pick the categories you usually spend on. You can change them any time in Settings.","自己加一个，例如：健身":"Add your own, e.g. Gym","自己加分类":"Add your own category","每个月大概想花多少？":"How much do you want to spend each month?","填了预算，首页就能算出「今天还可以花多少」。不想设可以先跳过。":"With a budget, Home can show how much you can still spend today. You can skip this.","例如：1500":"e.g. 1500","每月预算":"Monthly budget","你最常用哪里付钱？":"Where do you usually pay from?","现金、TNG、银行卡都可以，之后还能再加。":"Cash, e-wallet or bank card — you can add more later.","例如：现金、TNG eWallet":"e.g. Cash, TNG eWallet","现在里面有多少钱（可不填）":"Current balance (optional)","开始记账":"Start","设置好了，按下面的 ＋ 记第一笔吧":"All set — tap ＋ below to add your first expense","停车":"Parking","咖啡":"Coffee","网购":"Online shopping","房租":"Rent","水电":"Utilities","话费":"Phone bill","孩子":"Kids","宠物":"Pets","保险":"Insurance","娱乐":"Fun","旅行":"Travel","连接你的账本":"Connect your ledger","第一次用要连接 Google Sheet。请用我给你的那条链接打开，或把整条链接贴在下面。":"First time: connect to your Google Sheet. Open the link you were given, or paste the whole link below.","贴上链接":"Paste link","连接链接":"Connection link","连接":"Connect","链接不完整，要包含 # 后面的部分":"Link is incomplete — it must include the part after #","链接不对，请再检查一下":"That link doesn’t look right","还没连接账本":"Not connected yet","出错了":"Something went wrong","连不上 Google 的账本（没有网络，或部署的「谁可以访问」不是「任何人」）":"Can’t reach your Google ledger (offline, or the deployment isn’t set to “Anyone”)","几个小技巧":"A few tips","随时可以在「设置 → 新手引导」再看一次。":"You can see these again any time in Settings → Setup guide.","长按 ＋ 往上划":"Hold ＋ and swipe up","出现半圆：内圈选账户，外圈选分类，放手就去输入金额。":"A half circle appears: inner ring picks the account, outer ring the category. Let go to enter the amount.","「最近」往左滑一笔":"Swipe a recent record left","出现「修改」和「删除」，滑到底直接删除。":"Shows Edit and Delete. Swipe all the way to delete.","长按一笔记录":"Long-press a record","跳出小选单，可以修改或删除。":"A small menu pops up to edit or delete it.","左右滑动画面":"Swipe left or right","换页：首页、流水、预算、分析。":"Switch pages: Home, History, Budget, Insights.","记账":"Ledger","用 Google 登录":"Sign in with Google","‹ 用 Google 登录":"‹ Sign in with Google","隐私政策":"Privacy policy","我有连接链接":"I have a connection link","简单好用的记账 App。记录存在你自己的 Google Drive，只有你看得到。":"A simple expense tracker. Your records live in your own Google Drive — only you can see them.","登录后可以选你原本在用的记账 Google Sheet，或新建一个。":"After signing in, choose the ledger Sheet you already use, or create a new one. ","选一个账本":"Choose a ledger","已登录":"Signed in as","账本：":"Ledger: ","用我原本的账本":"Use my existing ledger","选你以前在用的那个记账 Google Sheet，以前的记录都在":"Pick the Google Sheet you already use — all your records come with it","新建一个账本":"Create a new ledger","在你的 Google Drive 建一个新的「记账」Sheet":"Makes a new “Ledger” Sheet in your Google Drive","换一个 Google 帐号":"Use another Google account","要重新登录":"Please sign in again","Google 登录过期了。按下面重新登录，你的记录都还在。":"Your Google sign-in has expired. Sign in again below — your records are safe.","正在打开你的 Google Drive…":"Opening your Google Drive…","正在建立账本…":"Creating your ledger…","正在登录…":"Signing in…","Google 帐号":"Google account","换账本":"Switch ledger","登出":"Sign out","还有 {0} 项没同步，再按一次就会丢掉":"{0} items not synced yet — tap again to discard them","Google 登录过期了，先存在手机里":"Google sign-in expired — saved on this phone for now","重新登录":"Sign in again","重新登录 ›":"Sign in again ›","Google 登录过期了，还有 {0} 项没同步":"Google sign-in expired, {0} items not synced","Google 登录过期了":"Google sign-in expired","Google 登录没有成功，请再试一次":"Google sign-in didn’t work — please try again","选你原本记账的 Google Sheet":"Pick your ledger Google Sheet","这个 Sheet 不是记账的账本（找不到「交易」分页）":"This Sheet isn’t a ledger (no “交易” tab)","打不开这个 Google Sheet（可能被删除了，或要重新选一次）":"Can’t open this Google Sheet (it may be deleted — try choosing it again)","打不开 Google 的选择器，请检查网络":"Couldn’t open the Google picker — check your connection","连不上 Google":"Can’t reach Google","还没选账本":"No ledger chosen yet","信用卡设定":"Card settings","额度":"Credit limit","年利率（看结单）":"Interest rate (see statement)","卡数（主卡算最低还款用）":"Number of cards","免息期":"Interest-free","最低还款":"Minimum payment","迟还费":"Late fee","利率":"Interest","最迟还款日":"Payment due","新结单":"New statement","＋ 新结单":"＋ New statement","结单日":"Statement date","结单金额（全额）":"Statement amount (full)","修改结单":"Edit statement","结单记录":"Statements","结单已保存":"Statement saved","已删除结单":"Statement deleted","还了全额":"Paid in full","还了剩下":"Paid the rest","还了最低":"Paid minimum","其他金额":"Other amount","还了多少":"Amount paid","撤销还款记录":"Undo payment records","已还清":"Paid off","这期已经还清了":"This statement is already paid","已还清，日历提醒已关掉":"Paid off — calendar reminder turned off","已撤销还款":"Payment undone","还没有结单。结单出来后按下面输入金额，截止日会自动算。":"No statement yet. When it arrives, enter the amount below; the due date is calculated for you.","还没有信用卡账户。到设置里加一个账户，类型选信用卡。":"No credit card account yet.","全额（还清不会有利息）":"Full amount (no interest if paid)","已还最低":"Minimum paid","已过截止日":"Past due","下一期（预估）":"Next statement (estimate)","预计最迟还款日":"Expected due date","就是今天":"Today","规则":"Rules","张":"cards","结单日起 {0} 天，全额还清才免息":"{0} days from statement; only interest-free if paid in full","欠款 {0}% 或 {1}，取较高（每张卡分开算）":"{0}% of balance or {1}, whichever is higher (per card)","没还最低：{0}%，最低 {1}，最高 {2}":"Minimum not paid: {0}%, min {1}, max {2}","{0} 个月都准时 {1}% · {2}/{3} 个月 {4}% · 其他 {5}%":"{0} months on time {1}% · {2}/{3} months {4}% · otherwise {5}%","（自动 +{0} 天）":"(auto +{0} days)","（自动算，结单上写的为准）":"(auto — follow your statement)","最低 {0}":"min {0}","至少要还":"Pay at least","。到期那天首页会出现提醒，按「记下」才会记账。":". On the due day Home reminds you; it is only recorded when you tap “Record”.","。到期那天首页会出现提醒，按「记下」才会记账。没有这一天的月份会算在月底。":". On the due day Home reminds you; it is only recorded when you tap “Record”. Months without this day use the last day.","{0} 号":"Day {0}","{0} 天，平均每天 {1}":"{0} days, {1}/day avg","每天约 {0}":"About {0}/day","结单":"Statement","上个月的资料如果不完整，比较只能参考。":"If last month’s data is incomplete, treat this as a rough guide.","（自动 {0} 天）":"(auto {0} days)","＋":"＋","－":"－","⌫":"⌫"};/*I18N_END*/   // 句子 → 英文（数字用 {0} {1} 代替；内容来自 i18n/en.py）
+/*RULES*/const I18N_RULES = [[/^(.+)这次跳过了$/, (_, d) => 'Skipped ' + tr(d)],
+  [/^(\d{4})年(\d{1,2})月$/, (_, y, m) => MON[m - 1] + ' ' + y],
+  [/^(\d{1,2})月$/, (_, m) => MON[m - 1]],
+  [/^(\d{1,2}) 月 ›$/, (_, m) => MON[m - 1] + ' ›'],
+  [/^(\d{1,2})月 (.+)$/, (_, m, r) => MON[m - 1] + ' ' + tr(r)],
+  [/^(?:(\d{4})年)?(\d{1,2})月(\d{1,2})日 ?(.*)$/, (_, y, m, d, r) => { const md = MON[m - 1] + ' ' + d + (y ? ' ' + y : ''); const w = r.match(/^周([日一二三四五六])(.*)$/); const rest = x => { x = x.trim().replace(/^·\s*/, ''); return x ? ' · ' + tr(x) : ''; }; return w ? WKE[w[1]] + ', ' + md + rest(w[2]) : md + rest(r); }],
+  [/^App 版本：(\S+)(.*)$/, (_, v, r) => 'App version: ' + v + (r ? ' ' + tr(r.trim()) : '')],
+  [/^▲▼ 是跟 (\d{1,2}) 月比较。(.*)$/, (_, m, r) => '▲▼ compared with ' + MON[m - 1] + '. ' + tr(r)],
+  [/^虚线是有记录的 (\d+) 个月的平均。点柱子去看那个月。最多是 (\d{1,2}) 月（(.+?)），最少是 (\d{1,2}) 月（(.+?)）。$/, (_, n, a, x, b, y) => 'Dashed line = average of ' + n + ' months with records. Tap a bar to open that month. Highest: ' + MON[a - 1] + ' (' + x + '), lowest: ' + MON[b - 1] + ' (' + y + ').'],
+  [/^(?:(\d{4}) 年 )?(\d{1,2}) 月 (\d{1,2}) 日(.*)$/, (_, y, m, d, r) => MON[m - 1] + ' ' + d + (y ? ' ' + y : '') + (r ? ' ' + tr(r) : '')],
+  [/^周([日一二三四五六])$/, (_, w) => WKE[w]],
+  [/^（周([日一二三四五六])）$/, (_, w) => '(' + WKE[w] + ')'],
+  [/^每周([日一二三四五六])$/, (_, w) => 'Every ' + WKE[w]],
+  [/^原始记录：(.*)$/, (_, r) => 'Original: ' + r],
+  [/^内圈选账户（现在：(.+)）$/, (_, a) => 'Inner ring: account (now ' + a + ')'],
+  [/^(.+) 还款$/, (_, a) => a + ' payment'],
+  [/^(.+) 规则$/, (_, a) => a + ' rules'],
+  [/^已记下 (.+) (−?RM[\d,.]+)$/, (_, n, m) => 'Recorded ' + n + ' ' + m],
+  [/^已记下还款 (.+)$/, (_, m) => 'Payment recorded ' + m],
+  [/^已删除，(\d+) 笔移到“其他”$/, (_, n) => 'Deleted — ' + n + ' records moved to “Other”'],
+  [/^(.+) · (.+)$/, (_, a, b) => tr(a) + ' · ' + tr(b)],
+];/*RULES_END*/   // [正则, 换成的英文或函数]
+function tr1(c) {
+  let r = I18N_EN[c]; if (r != null) return r;
+  const nums = []; const tpl = c.replace(NUMS, m => { nums.push(m); return '{' + (nums.length - 1) + '}'; });
+  r = I18N_EN[tpl]; if (r != null) return r.replace(/\{(\d+)\}/g, (_, i) => nums[i]);
+  for (const [re, f] of I18N_RULES) { const m = c.match(re); if (m) return typeof f === 'function' ? f(...m) : c.replace(re, f); }
+  for (const sep of [' · ', '，', '。']) if (c.includes(sep)) { const parts = c.split(sep); if (parts.length > 1) return parts.map(x => tr(x)).join(sep === ' · ' ? ' · ' : sep === '，' ? ', ' : '. ').replace(/\. $/, '.'); }
+  if (window.__miss) window.__miss.add(tpl);
+  return c;
+}
+function tr(s) {
+  if (LANG !== 'en' || !s || !HAN.test(s)) return s;
+  const lead = s.match(/^\s*/)[0], tail = s.match(/\s*$/)[0], core = s.trim();
+  return core ? lead + tr1(core) + tail : s;
+}
+const TR_ATTRS = ['placeholder', 'aria-label', 'title'];
+// data-en：同一个中文在不同地方要不同英文时（例如标题「分类」= Categories，栏位「分类」= Category）
+const trText = n => (LANG === 'en' && n.parentElement?.dataset?.en && HAN.test(n.nodeValue)) ? n.parentElement.dataset.en : tr(n.nodeValue);
+function trTree(root) {
+  if (root.nodeType === 3) { const v = trText(root); if (v !== root.nodeValue) root.nodeValue = v; return; }
+  if (root.nodeType !== 1 || /^(SCRIPT|STYLE)$/.test(root.tagName) || root.closest?.('[data-notr]')) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
+  while ((n = w.nextNode())) if (HAN.test(n.nodeValue) && !/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentElement?.tagName) && !n.parentElement?.closest('[data-notr]')) { const v = trText(n); if (v !== n.nodeValue) n.nodeValue = v; }
+  for (const el of [root, ...root.querySelectorAll('[placeholder],[aria-label],[title]')])
+    for (const a of TR_ATTRS) if (el.hasAttribute(a)) { const v = el.getAttribute(a), t = tr(v); if (t !== v) el.setAttribute(a, t); }
+}
+if (LANG === 'en') {
+  document.documentElement.lang = 'en';
+  new MutationObserver(ms => { for (const m of ms) { if (m.type === 'childList') m.addedNodes.forEach(trTree); else trTree(m.target); } })
+    .observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: TR_ATTRS });
+  queueMicrotask(() => { trTree(document.body); document.title = 'Ledger'; });
+}
+function setLang(l) { store.set('ledger.lang', l); location.reload(); }
+
 /* ---------- 外观：跟随手机 / 浅色 / 深色 ---------- */
 const themeMode = () => { try { return localStorage.getItem('ledger.theme') || 'auto'; } catch { return 'auto'; } };
 function applyTheme() {
@@ -2300,18 +3132,29 @@ function drawGuide() {
   let body = '';
   if (d.step === 1) body = `<h2>欢迎使用记账</h2><p class="note">先选你平常会花钱的分类。之后随时可以在「设置」里改。</p>
     <div class="chips">${s.cats.filter(c => !FIXED_CATS.includes(c.id) && c.kind !== 'transfer').map(c => gChip(c.id, c.name, d.cats.has(c.id), c.color)).join('')}
-    ${SUGGEST.filter(n => !s.cats.some(c => c.name.includes(n))).map(n => gChip('new:' + n, n, d.extra.includes(n))).join('')}</div>
+    ${SUGGEST.filter(n => !s.cats.some(c => c.name.includes(n) || c.name === tr(n))).map(n => gChip('new:' + n, n, d.extra.includes(n))).join('')}</div>
     <div class="addline"><input id="g-new" placeholder="自己加一个，例如：健身" aria-label="自己加分类"><button class="btn" data-gadd="1">加</button></div>`;
   else if (d.step === 2) body = `<h2>每个月大概想花多少？</h2><p class="note">填了预算，首页就能算出「今天还可以花多少」。不想设可以先跳过。</p>
     <label class="money-in big-in"><span>RM</span><input inputmode="decimal" id="g-total" value="${d.total || ''}" placeholder="例如：1500" aria-label="每月预算"></label>`;
+  else if (d.step === 4) body = `<h2>几个小技巧</h2><p class="note">随时可以在「设置 → 新手引导」再看一次。</p>
+    <div class="tips">
+      <div class="gtip"><svg viewBox="0 0 64 64" aria-hidden="true"><g class="t-fan a-fan"><path class="t-soft" d="M10 48a22 22 0 0 1 44 0" stroke-width="8" opacity=".3"/><path class="t-soft" d="M19 48a13 13 0 0 1 26 0" stroke-width="6" opacity=".55"/></g><circle class="t-acc" cx="32" cy="48" r="7"/><path d="M32 44.5v7M28.5 48h7" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><circle class="t-f a-fanf" cx="32" cy="48" r="5"/></svg>
+        <div><b>长按 ＋ 往上划</b><span>出现半圆：内圈选账户，外圈选分类，放手就去输入金额。</span></div></div>
+      <div class="gtip"><svg viewBox="0 0 64 64" aria-hidden="true"><rect class="t-tan" x="30" y="23" width="13" height="18" rx="3"/><rect class="t-red" x="44" y="23" width="14" height="18" rx="3"/><g class="a-slide"><rect class="t-row" x="6" y="22" width="52" height="20" rx="5"/><rect class="t-ink" x="12" y="28" width="18" height="3" rx="1.5" opacity=".6"/><rect class="t-ink" x="12" y="34" width="11" height="2.5" rx="1.2" opacity=".3"/></g><circle class="t-f a-slidef" cx="44" cy="32" r="5"/></svg>
+        <div><b>「最近」往左滑一笔</b><span>出现「修改」和「删除」，滑到底直接删除。</span></div></div>
+      <div class="gtip"><svg viewBox="0 0 64 64" aria-hidden="true"><rect class="t-row" x="6" y="34" width="52" height="20" rx="5"/><rect class="t-ink" x="12" y="40" width="18" height="3" rx="1.5" opacity=".6"/><rect class="t-ink" x="12" y="46" width="11" height="2.5" rx="1.2" opacity=".3"/><g class="t-menu"><rect class="t-row" x="16" y="8" width="32" height="22" rx="5"/><rect class="t-ink" x="21" y="13" width="16" height="3" rx="1.5" opacity=".6"/><rect class="t-red" x="21" y="21" width="12" height="3" rx="1.5"/></g><circle class="t-f a-holdf" cx="32" cy="44" r="4"/></svg>
+        <div><b>长按一笔记录</b><span>跳出小选单，可以修改或删除。</span></div></div>
+      <div class="gtip"><svg viewBox="0 0 64 64" aria-hidden="true"><g class="a-page"><rect class="t-row" x="9" y="10" width="40" height="44" rx="6"/><rect class="t-acc" x="15" y="17" width="20" height="5" rx="2" opacity=".7"/><rect class="t-ink" x="15" y="27" width="28" height="3" rx="1.5" opacity=".35"/><rect class="t-ink" x="15" y="34" width="22" height="3" rx="1.5" opacity=".35"/><rect class="t-row" x="55" y="10" width="40" height="44" rx="6"/><rect class="t-ink" x="61" y="17" width="20" height="5" rx="2" opacity=".5"/></g><circle class="t-f a-pagef" cx="40" cy="40" r="5"/></svg>
+        <div><b>左右滑动画面</b><span>换页：首页、流水、预算、分析。</span></div></div>
+    </div>`;
   else body = `<h2>你最常用哪里付钱？</h2><p class="note">现金、TNG、银行卡都可以，之后还能再加。</p>
     <div class="field"><label for="g-acct">账户名称</label><input id="g-acct" value="${esc(d.acct)}" placeholder="例如：现金、TNG eWallet"></div>
     <div class="field"><label for="g-open">现在里面有多少钱（可不填）</label><input id="g-open" inputmode="decimal" value="${d.opening || ''}" placeholder="RM 0.00"></div>`;
   guideBox.innerHTML = `<div class="guide-in" role="dialog" aria-modal="true" aria-label="新手引导">
-    <div class="steps">${[1, 2, 3].map(i => `<i class="${i <= d.step ? 'on' : ''}"></i>`).join('')}</div>
+    <div class="steps">${[1, 2, 3, 4].map(i => `<i class="${i <= d.step ? 'on' : ''}"></i>`).join('')}</div>
     ${body}
     <div class="g-btns"><button class="btn" data-gnav="${d.step === 1 ? 'skip' : 'back'}">${d.step === 1 ? '跳过' : '上一步'}</button>
-      <button class="btn primary" data-gnav="${d.step === 3 ? 'done' : 'next'}">${d.step === 3 ? '开始记账' : d.step === 2 && !d.total ? '先跳过' : '下一步'}</button></div>
+      <button class="btn primary" data-gnav="${d.step === 4 ? 'done' : 'next'}">${d.step === 4 ? '开始记账' : d.step === 2 && !d.total ? '先跳过' : '下一步'}</button></div>
   </div>`;
 }
 function readGuide() {
@@ -2323,7 +3166,7 @@ async function finishGuide() {
   const s = settings(), b = budget();
   const used = new Set([...S.txns.values()].map(t => t.cat));
   const keep = s.cats.filter(c => FIXED_CATS.includes(c.id) || c.kind === 'transfer' || gd.cats.has(c.id) || used.has(c.id));
-  const added = gd.extra.filter(n => !keep.some(c => c.name === n)).map((n, i) => ({ id: 'c' + Date.now().toString(36) + i, name: n, color: [8, 1, 2, 3, 4, 5, 6, 7][(keep.length + i) % 8], kind: 'normal' }));
+  const added = gd.extra.filter(n => !keep.some(c => c.name === n || c.name === tr(n))).map((n, i) => ({ id: 'c' + Date.now().toString(36) + i, name: LANG === 'en' ? tr(n) : n, color: [8, 1, 2, 3, 4, 5, 6, 7][(keep.length + i) % 8], kind: 'normal' }));
   const cats = [...keep.filter(c => c.id !== 'other'), ...added, ...keep.filter(c => c.id === 'other')];
   const a0 = s.accounts[0] || { id: 'cash', opening: 0 };
   const accounts = [{ ...a0, name: gd.acct.trim() || a0.name || '现金', opening: r2(parseFloat(gd.opening) || 0) }, ...s.accounts.slice(1)];
@@ -2345,7 +3188,7 @@ guideBox.addEventListener('click', e => {
 });
 
 /* ---------- boot ---------- */
-const APP_VER = '2026-11-20b';
+const APP_VER = '2026-11-20e';
 // 新版：先显示手机里存的上次资料（打开快），再到 Google 拿最新的
 function replayOutbox() {
   for (const { fn, args } of store.get('ledger.outbox') || []) {
@@ -2358,7 +3201,9 @@ function replayOutbox() {
 function showConnect() {
   $('#view').innerHTML = `<section class="card"><h2>连接你的账本</h2>
     <p class="note" style="margin-top:0">第一次用要连接 Google Sheet。请用我给你的那条链接打开，或把整条链接贴在下面。</p>
-    <div class="addline"><input id="conn-in" placeholder="贴上链接" aria-label="连接链接"><button class="btn primary" id="conn-ok">连接</button></div></section>`;
+    <div class="addline"><input id="conn-in" placeholder="贴上链接" aria-label="连接链接"><button class="btn primary" id="conn-ok">连接</button></div>
+    <button class="linkbtn" id="conn-back" style="margin-top:12px">‹ 用 Google 登录</button></section>`;
+  $('#conn-back').onclick = () => showGate('welcome');
   $('#conn-ok').onclick = () => {
     const v = $('#conn-in').value.trim(), i = v.indexOf('#');
     if (i < 0) return toast('链接不完整，要包含 # 后面的部分');
@@ -2373,17 +3218,110 @@ async function checkUpdate() {
     if (v && v !== APP_VER) toast('有新版本', { label: '更新', fn: () => location.reload() });
   } catch {}
 }
-function bootWeb() {
-  if (!CONN) { renderHeader(); return showConnect(); }
+/* ---------- 登录画面（还没登录 / 还没选账本 / 登录过期） ---------- */
+const G_LOGO = '<svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+const langSeg = () => `<div class="seg theme-seg gate-lang" role="group" aria-label="语言">${[['zh', '中文'], ['en', 'English']].map(([k, n]) => `<button data-lang="${k}" aria-pressed="${LANG === k}" data-notr>${n}</button>`).join('')}</div>`;
+function showGate(kind) {
+  S.loaded = false; document.body.classList.add('gate'); guideBox.hidden = true;
+  const v = $('#view'), email = (CONN && CONN.email) || '';
+  if (kind === 'pick') v.innerHTML = `<section class="gate-box">
+      <h1>选一个账本</h1><p class="note">已登录 <b data-notr>${esc(email)}</b></p>
+      <button class="gate-opt" id="g-pick"><b>用我原本的账本</b><small>选你以前在用的那个记账 Google Sheet，以前的记录都在</small></button>
+      <button class="gate-opt" id="g-new"><b>新建一个账本</b><small>在你的 Google Drive 建一个新的「记账」Sheet</small></button>
+      <p class="note gate-busy" id="g-busy" hidden></p>
+      <button class="linkbtn" id="g-out">换一个 Google 帐号</button></section>`;
+  else if (kind === 'relogin') v.innerHTML = `<section class="gate-box">
+      <h1>要重新登录</h1><p class="note">Google 登录过期了。按下面重新登录，你的记录都还在。</p>
+      <button class="btn gbtn" id="g-login">${G_LOGO}<span>用 Google 登录</span></button>
+      <button class="linkbtn" id="g-out">换一个 Google 帐号</button></section>`;
+  else v.innerHTML = `<section class="gate-box">
+      <img class="gate-ico" src="icon-192.png" alt="" onerror="this.remove()">
+      <h1>记账</h1><p class="note">简单好用的记账 App。记录存在你自己的 Google Drive，只有你看得到。</p>
+      <button class="btn gbtn" id="g-login">${G_LOGO}<span>用 Google 登录</span></button>
+      <p class="note gate-small">登录后可以选你原本在用的记账 Google Sheet，或新建一个。<a href="privacy.html" target="_blank" rel="noopener">隐私政策</a></p>
+      ${langSeg()}
+      <button class="linkbtn" id="g-link">我有连接链接</button></section>`;
+  const on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
+  on('g-login', () => gLogin(kind === 'relogin' ? '' : 'select_account', kind === 'relogin' ? email : ''));
+  on('g-link', () => { document.body.classList.remove('gate'); showConnect(); });
+  on('g-out', () => gSignOut(true));
+  const busy = async (msg, job) => {
+    const el = $('#g-busy'); document.querySelectorAll('.gate-opt').forEach(b => b.disabled = true);
+    el.hidden = false; el.textContent = msg;
+    try { const r = await job(); if (r) gChosen(r); else { el.hidden = true; document.querySelectorAll('.gate-opt').forEach(b => b.disabled = false); } }
+    catch (e) { el.hidden = true; document.querySelectorAll('.gate-opt').forEach(b => b.disabled = false); if (e.auth) return gLogin('', email); toast(errMsg(e)); }
+  };
+  on('g-pick', () => busy('正在打开你的 Google Drive…', async () => { const doc = await gPick(); if (!doc) return null; $('#g-busy').textContent = '正在读取账本…'; return gUse(doc); }));
+  on('g-new', () => busy('正在建立账本…', gCreate));
+}
+function gChosen(r) {
+  ['ledger.cache', 'ledger.outbox', 'ledger.onboarded'].forEach(k => store.set(k, null));
+  CONN = { ...CONN, id: r.id, title: r.title }; store.set('ledger.conn', CONN);
+  S.txns = new Map(); S.settings = null; S.tab = 'home';
+  document.body.classList.remove('gate'); $('#view').innerHTML = '<div class="status">正在读取账本…</div>';
+  reload();
+}
+function gSignOut(force) {
+  const n = (store.get('ledger.outbox') || []).length;
+  if (n && !force && !gSignOut.armed) { gSignOut.armed = true; setTimeout(() => gSignOut.armed = false, 4000); return toast(`还有 ${n} 项没同步，再按一次就会丢掉`); }
+  const t = store.get('ledger.gtok');
+  if (t && t.t) fetch('https://oauth2.googleapis.com/revoke?token=' + encodeURIComponent(t.t), { method: 'POST' }).catch(() => {});
+  ['ledger.conn', 'ledger.gtok', 'ledger.cache', 'ledger.outbox', 'ledger.onboarded', 'ledger.gfail'].forEach(k => store.set(k, null));
+  CONN = null; S.txns = new Map(); S.settings = null; showGate('welcome');
+}
+function gSwitch() {
+  const n = (store.get('ledger.outbox') || []).length;
+  if (n && !gSwitch.armed) { gSwitch.armed = true; setTimeout(() => gSwitch.armed = false, 4000); return toast(`还有 ${n} 项没同步，再按一次就会丢掉`); }
+  if (!gTok()) return gLogin('', CONN.email);
+  showGate('pick');
+}
+// Google 的文件选择器（只列出 Google Sheet）；选了哪个，App 才看得到哪个
+const loadJs = src => new Promise((ok, no) => document.head.appendChild(Object.assign(document.createElement('script'), { src, onload: ok, onerror: () => no(new Error('打不开 Google 的选择器，请检查网络')) })));
+async function gPick() {
+  const tok = gTok(); if (!tok) throw authErr();
+  if (!(window.gapi && gapi.load)) await loadJs('https://apis.google.com/js/api.js');
+  await new Promise((ok, no) => gapi.load('picker', { callback: ok, onerror: () => no(new Error('打不开 Google 的选择器，请检查网络')) }));
+  const P = google.picker;
+  return new Promise(resolve => {
+    const view = new P.DocsView(P.ViewId.SPREADSHEETS).setMode(P.DocsViewMode.LIST);
+    new P.PickerBuilder().addView(view).enableFeature(P.Feature.NAV_HIDDEN)
+      .setOAuthToken(tok).setDeveloperKey(G.key).setAppId(G.app).setLocale(LANG === 'en' ? 'en' : 'zh-CN').setTitle(tr('选你原本记账的 Google Sheet'))
+      .setCallback(d => {
+        const a = d[P.Response.ACTION];
+        if (a === P.Action.PICKED) { const doc = d[P.Response.DOCUMENTS][0]; resolve({ id: doc[P.Document.ID], name: doc[P.Document.NAME] }); }
+        else if (a === P.Action.CANCEL) resolve(null);
+      }).build().setVisible(true);
+  });
+}
+async function gBack(r) {   // 刚从 Google 登录回来
+  if (!r.ok) {
+    if (r.silent && CONN && CONN.id) return bootWeb(true);          // 悄悄续期不成：先显示手机里的资料
+    if (r.error !== 'access_denied') toast('Google 登录没有成功，请再试一次');
+    return CONN && CONN.email ? showGate(CONN.id ? 'relogin' : 'pick') : showGate('welcome');
+  }
+  if (CONN && CONN.g && CONN.id) return bootWeb();
+  $('#view').innerHTML = '<div class="status">正在登录…</div>';
+  let email = '';
+  try { email = (await gFetch('https://www.googleapis.com/oauth2/v3/userinfo')).email || ''; } catch {}
+  CONN = { g: 1, email }; store.set('ledger.conn', CONN);
+  showGate('pick');
+}
+function bootWeb(noSilent) {
+  document.body.classList.remove('gate');
+  if (!CONN) { renderHeader(); return showGate('welcome'); }
+  if (CONN.g && !CONN.id) return gTok() ? showGate('pick') : showGate('welcome');
+  if (CONN.g && !gTok() && !noSilent && gCanSilent()) return gLogin('none', CONN.email);   // 通行证过期：先去 Google 续一下
   const c = store.get('ledger.cache');
   if (c && !S.loaded) { try { applyData(c); replayOutbox(); S.loaded = true; } catch {} }
+  if (CONN.g && !gTok() && !S.loaded) return showGate('relogin');
   route(); reload(); setTimeout(checkUpdate, 3000);
 }
 if (WEB) {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
   addEventListener('online', () => { if (S.loaded) reload(); });
   addEventListener('hashchange', () => { const c = readConn(); if (c && (!CONN || c.k !== CONN.k || c.u !== CONN.u)) { CONN = c; bootWeb(); } });
-  bootWeb();
+  const back = gReturn();
+  if (back) gBack(back); else bootWeb();
 } else { route(); reload(); }
 // 回到 App 时（例如在电脑上改过 Sheet）自动重新读取
 document.addEventListener('visibilitychange', () => {
