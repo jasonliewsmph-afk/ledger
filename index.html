@@ -479,6 +479,14 @@ html, body { overscroll-behavior-x: none; }
 .guide-in .chip { padding: 8px 14px 8px 11px; font-size: .9rem; }
 .g-btns { display: flex; gap: 10px; margin-top: 12px; }
 .g-btns .btn { flex: 1; min-height: 48px; }
+.rows { position: relative; }
+.rows .row { position: relative; z-index: 1; background: var(--surface); touch-action: pan-y; }
+.row-acts { position: absolute; left: 0; right: 0; z-index: 0; display: flex; justify-content: flex-end; overflow: hidden; }
+.row-acts button { width: 76px; flex: 0 0 auto; border: 0; display: grid; place-items: center; align-content: center; gap: 2px; font-size: .72rem; transition: width .18s ease, flex-grow .18s ease; }
+.row-acts .ra-edit { background: var(--accent); color: var(--on-accent); }
+.row-acts .ra-del { background: var(--danger); color: #fff; }
+.row-acts.full .ra-edit { width: 0; padding: 0; overflow: hidden; }
+.row-acts.full .ra-del { flex-grow: 1; }
 .banner.slim { padding: 8px 12px; font-size: .8rem; border-radius: 10px; margin-bottom: -6px; }
 .rc-card { padding: 10px 12px; gap: 6px; border-radius: 12px; }
 .rc-card .rc-btns .btn { padding: 6px 4px; font-size: .8rem; border-radius: 10px; }
@@ -677,9 +685,9 @@ async function saveTxns(list) {
   list.forEach(t => S.txns.set(t.id, t)); render();
   try { await queued(() => api('saveTxns', list)); } catch (e) { toast('没存上：' + errMsg(e)); reload(); throw e; }
 }
-async function deleteTxn(id) {
+async function deleteTxn(id, noAnim) {
   const old = S.txns.get(id);
-  await moOut(rowOf(id));
+  if (!noAnim) await moOut(rowOf(id));
   S.txns.delete(id); render();
   try { await queued(() => api('deleteTxn', id)); } catch (e) { toast('删除失败：' + errMsg(e)); reload(); return; }
   if (old) toast('已删除', { label: '撤销', fn: async () => { try { MO.fresh = { id: old.id }; await saveTxn(old); toast('已恢复'); } catch {} } });
@@ -1601,6 +1609,7 @@ function readSheet() {
 }
 function goStep(n) { readSheet(); draft._step = n; drawSheet(); }
 function padKey(k) {
+  SFX.key(k);
   let a = draft._amt || '';
   const cur = () => a.split(/[+-]/).pop();
   if (k === 'C') a = '';
@@ -1627,7 +1636,8 @@ function padKey(k) {
 }
 function padNext() {
   const total = evalAmt(draft._amt);
-  if (!(total > 0)) { toast(hasOp(draft._amt) ? '总数要大于 0' : '先输入金额'); return; }
+  if (!(total > 0)) { SFX.off(); toast(hasOp(draft._amt) ? '总数要大于 0' : '先输入金额'); return; }
+  SFX.next();
   // 有加减时，把算式记进备注（可以在下一页改掉）
   let note = draft.note || '';
   if (draft._exprNote && note.includes(draft._exprNote)) note = note.replace(' · ' + draft._exprNote, '').replace(draft._exprNote, '').trim();
@@ -1783,7 +1793,8 @@ document.addEventListener('touchstart', e => {
   const t = e.touches[0], el = e.target;
   if (!$('main').contains(el) || el === document.activeElement && el.matches('input, textarea') || el.closest('textarea') || sideScroll(el)) return;
   if (t.clientX < 24 || t.clientX > innerWidth - 24) return;   // 屏幕边缘留给手机自己的返回手势
-  swipe = { x: t.clientX, y: t.clientY, lx: t.clientX, lt: Date.now(), vx: 0, dx: 0, mode: null, dir: 0, next: null };
+  const row = S.tab === 'home' ? el.closest('.rows .row[data-edit]') : null;   // 只在首页「最近」：流水页往左滑是换页
+  swipe = { x: t.clientX, y: t.clientY, lx: t.clientX, lt: Date.now(), vx: 0, dx: 0, mode: null, dir: 0, next: null, row };
 }, { passive: true });
 function dragTo(dx) {
   const dir = dx < 0 ? 1 : -1;
@@ -1802,14 +1813,17 @@ document.addEventListener('touchmove', e => {
   const t = e.touches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
   if (!swipe.mode) {
     if (Math.hypot(dx, dy) < 10) return;
-    if (Math.abs(dx) > Math.abs(dy) * 1.2) { swipe.mode = 'h'; lpCancel(); } else { swipe = null; return; }
+    if (Math.abs(dx) > Math.abs(dy) * 1.2) { swipe.mode = swipe.row && (dx < 0 || swipe.row === openRow) ? 'row' : 'h'; lpCancel(); } else { swipe = null; return; }
   }
   e.preventDefault();
   const now = Date.now(); swipe.vx = (t.clientX - swipe.lx) / Math.max(1, now - swipe.lt); swipe.lx = t.clientX; swipe.lt = now;
+  if (swipe.mode === 'row') return rowMove(swipe.row, dx);
   dragTo(dx);
 }, { passive: false });
 function dragEnd() {
   const sw = swipe; swipe = null;
+  if (sw && sw.mode) rowEat = true;   // 滑过之后放手，那一下不算点击
+  if (sw && sw.mode === 'row') return rowEnd(sw.row, sw.vx);
   if (!sw || sw.mode !== 'h') return;
   const W = innerWidth, v = $('#view');
   const commit = !!sw.next && (Math.abs(sw.dx) > W * 0.25 || (Math.abs(sw.dx) > 50 && Math.abs(sw.vx) > 0.4 && Math.sign(sw.vx) === Math.sign(sw.dx)));
@@ -1829,6 +1843,47 @@ function dragEnd() {
 }
 document.addEventListener('touchend', dragEnd, { passive: true });
 document.addEventListener('touchcancel', dragEnd, { passive: true });
+/* 往左滑一笔记录：后面露出「修改」「删除」（滑到底直接删除），跟 iPhone 一样 */
+const ACT_W = 152;
+let openRow = null, rowEat = false;
+function rowActs(row) {
+  if (row._acts && row._acts.isConnected) return row._acts;
+  const a = document.createElement('div'); a.className = 'row-acts';
+  a.style.top = row.offsetTop + 'px'; a.style.height = row.offsetHeight + 'px';
+  a.innerHTML = `<button class="ra-edit" data-ra="edit" data-id="${esc(row.dataset.edit)}">${ICO_EDIT}<span>修改</span></button><button class="ra-del" data-ra="del" data-id="${esc(row.dataset.edit)}">${ICO_DEL}<span>删除</span></button>`;
+  row.parentNode.insertBefore(a, row); row._acts = a; return a;
+}
+function rowMove(row, dx) {
+  const a = rowActs(row), base = row === openRow ? -ACT_W : 0;
+  let x = base + dx; if (x > 0) x *= 0.2;
+  row.style.transition = 'none'; row.style.transform = `translateX(${x}px)`; row._x = x;
+  const full = -x > row.offsetWidth * 0.62;
+  if (full !== a.classList.contains('full')) { a.classList.toggle('full', full); try { navigator.vibrate && navigator.vibrate(10); } catch {} if (full) SFX.tick(); }
+}
+function rowSlide(row, x, ms = 220) {
+  row.style.transition = calm() ? 'none' : `transform ${ms}ms cubic-bezier(.25,.9,.3,1)`; row.style.transform = x ? `translateX(${x}px)` : ''; row._x = x;
+}
+function rowClose(row) {
+  if (!row) return; if (openRow === row) openRow = null;
+  rowSlide(row, 0); const a = row._acts; setTimeout(() => { if (row._x === 0 && a) { a.remove(); row._acts = null; } }, 240);
+}
+function rowEnd(row, vx) {
+  const x = row._x || 0, a = rowActs(row);
+  if (a.classList.contains('full')) return rowDelete(row);
+  if (x < -ACT_W / 2 || (vx < -0.5 && x < -40)) { rowSlide(row, -ACT_W); if (openRow && openRow !== row) rowClose(openRow); if (openRow !== row) SFX.tick(); openRow = row; }
+  else rowClose(row);
+}
+async function rowDelete(row) {
+  const id = row.dataset.edit, a = row._acts; openRow = null;
+  SFX.trash(); try { navigator.vibrate && navigator.vibrate(20); } catch {}
+  if (!calm()) {
+    if (a) a.classList.add('full');
+    rowSlide(row, -row.offsetWidth - 20, 180); await new Promise(r => setTimeout(r, 180));
+    const h = row.offsetHeight; [row, a].forEach(el => el && (el.style.overflow = 'hidden'));
+    await Promise.all([row, a].filter(Boolean).map(el => el.animate([{ height: h + 'px' }, { height: '0px', paddingTop: '0px', paddingBottom: '0px', borderWidth: '0px' }], { duration: 180, easing: EASE, fill: 'forwards' }).finished));
+  }
+  deleteTxn(id, true);
+}
 /* 长按一笔记录：像 iPhone 一样浮起来，下面出小选单（修改 / 删除） */
 const ctxBox = document.body.appendChild(Object.assign(document.createElement('div'), { id: 'ctx', className: 'ctx', hidden: true }));
 const ICO_EDIT = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg>';
@@ -1870,7 +1925,12 @@ document.addEventListener('pointerup', lpCancel); document.addEventListener('poi
 addEventListener('scroll', lpCancel, { passive: true });
 $('#view').addEventListener('contextmenu', e => { const row = e.target.closest('[data-edit]'); if (!row) return; e.preventDefault(); lpCancel(); if (ctxBox.hidden) ctxOpen(row); });
 // 长按放手时那一下点击不要算（不然会直接打开编辑或马上关掉选单）
-document.addEventListener('pointerdown', () => { ctxEat = false; }, true);
+document.addEventListener('pointerdown', e => {
+  ctxEat = false; rowEat = false;   // 新的一下触摸才重新算
+  // 有一笔滑开着：按别的地方就收起来（这一下点击不算）
+  if (openRow && !e.target.closest('.row-acts') && e.target.closest('.row') !== openRow) { rowClose(openRow); rowEat = true; }
+}, true);
+document.addEventListener('click', e => { if (rowEat) { rowEat = false; if (!e.target.closest('.row-acts')) { e.stopPropagation(); e.preventDefault(); return; } } }, true);
 document.addEventListener('click', e => { if (!ctxEat) return; ctxEat = false; if (!e.target.closest('.ctx-menu')) { e.stopPropagation(); e.preventDefault(); } }, true);
 ctxBox.addEventListener('click', e => {
   const b = e.target.closest('[data-cx]'), id = ctxBox.dataset.id;
@@ -1948,6 +2008,9 @@ const SFX = (() => {
     cancel() { if (enabled()) tone(260, 200, 0.07, 'sine', 0.2); },
     done() { if (enabled()) { tone(880, 880, 0.07, 'sine', 0.18); tone(1320, 1320, 0.11, 'sine', 0.18, 0.07); } },
     off() { if (enabled()) tone(300, 160, 0.1, 'sine', 0.14); },
+    key(k) { if (!enabled()) return; if (k === '⌫' || k === 'C') tone(760, 560, 0.045, 'sine', 0.13); else if (k === '+' || k === '-') tone(1100, 1100, 0.035, 'sine', 0.13); else tone(1650, 1650, 0.022, 'sine', 0.11); },
+    next() { if (enabled()) tone(520, 900, 0.08, 'sine', 0.2); },
+    back() { if (enabled()) tone(760, 480, 0.06, 'sine', 0.14); },
     saved() { if (enabled()) { tone(784, 784, 0.09, 'sine', 0.26); tone(1175, 1175, 0.16, 'sine', 0.26, 0.09); tone(2350, 2350, 0.12, 'triangle', 0.07, 0.1); } },
     menu() { if (enabled()) { tone(520, 980, 0.06, 'sine', 0.24); tone(1200, 1200, 0.03, 'triangle', 0.1, 0.05); } },
     trash() { if (enabled()) tone(520, 140, 0.16, 'triangle', 0.2); },
@@ -2094,6 +2157,12 @@ $('#view').addEventListener('click', async e => {
   const b = e.target.closest('button, .row, .dbar, .day-item'); if (!b) return;
   if (!$('#rform').hidden) return;
   const s = settings();
+  if (b.dataset.ra) {
+    const id = b.dataset.id, row = rowOf(id);
+    if (b.dataset.ra === 'del') return row ? rowDelete(row) : deleteTxn(id);
+    rowClose(row); SFX.tick(); const t = S.txns.get(id); if (t) openSheet(t); return;
+  }
+  if (openRow && b === openRow) { rowClose(openRow); return; }
   if (b.dataset.ok) { e.stopPropagation(); const t = S.txns.get(b.dataset.ok); if (t) await saveTxn({ ...t, guess: false }); return; }
   if (b.dataset.edit) { const t = S.txns.get(b.dataset.edit); if (t) openSheet(t); return; }
   if (b.dataset.goto) { go(b.dataset.goto); return; }
@@ -2171,14 +2240,15 @@ $('#overlay').addEventListener('click', e => {
   if (e.target.id === 'overlay') return closeSheet();
   const b = e.target.closest('button'); if (!b || !draft) return;
   if (b.id === 'e-back') {
+    SFX.back();
     if (draft._new) { if (draft._step === 1) return closeSheet(); return goStep(draft._step === 3 ? 2 : 1); }
     return draft._step === 3 ? closeSheet() : goStep(3);
   }
   if (b.dataset.key) return padKey(b.dataset.key);
   if (b.dataset.dir) { draft.dir = b.dataset.dir; if (draft.cat && !catChoices().some(c => c.id === draft.cat)) draft.cat = ''; return drawSheet(); }
   if (b.id === 'e-next') return padNext();
-  if (b.dataset.pick) { draft.cat = b.dataset.pick; return goStep(3); }
-  if (b.dataset.go) return goStep(+b.dataset.go);
+  if (b.dataset.pick) { SFX.next(); draft.cat = b.dataset.pick; return goStep(3); }
+  if (b.dataset.go) { SFX.tick(); return goStep(+b.dataset.go); }
   if (b.id === 'e-save') return commitSheet();
   if (b.id === 'e-del') {
     if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = '确定删除？'; return; }
@@ -2275,7 +2345,7 @@ guideBox.addEventListener('click', e => {
 });
 
 /* ---------- boot ---------- */
-const APP_VER = '2026-11-20a';
+const APP_VER = '2026-11-20b';
 // 新版：先显示手机里存的上次资料（打开快），再到 Google 拿最新的
 function replayOutbox() {
   for (const { fn, args } of store.get('ledger.outbox') || []) {
