@@ -1282,6 +1282,7 @@ function setRecurLocal(id, done) { const s = settings(); S.settings = { ...s, re
 async function recurRecord(it, due, txn) {
   if (S.recBusy) return; S.recBusy = it.id;
   const prev = it.done || '';
+  SFX.saved();
   await moOut($('#view').querySelector(`[data-rc="${CSS.escape(it.id)}"]`), '已记下');
   MO.fresh = { id: txn.id }; MO.delay = 100;
   S.txns.set(txn.id, txn); setRecurLocal(it.id, due > prev ? due : prev); render();
@@ -1645,7 +1646,8 @@ async function commitSheet() {
   const { _new, _applyAll, _amt, _step, _exprNote, _recur, ...t } = draft;
   t.guess = false;
   if (_recur) { closeSheet(); const it = settings().recurring.find(x => x.id === _recur.id); if (it) await recurRecord(it, _recur.due, { ...t, raw: t.desc }); return; }
-  if (_new) { t.raw = t.desc; MO.fresh = { id: t.id, kind: 'new', label: (t.dir === 'in' ? '+' : '−') + 'RM' + fmt(t.amount) }; MO.delay = 650; }
+  if (_new) { t.raw = t.desc; MO.fresh = { id: t.id, kind: 'new', label: (t.dir === 'in' ? '+' : '−') + 'RM' + fmt(t.amount) }; MO.delay = 650; SFX.saved(); try { navigator.vibrate && navigator.vibrate([18, 60, 28]); } catch {} }
+  else SFX.tick();
   const key = (t.raw || t.desc).toUpperCase();
   const others = _applyAll !== false && !_new ? [...S.txns.values()].filter(x => x.id !== t.id && (x.raw || x.desc) === (t.raw || t.desc) && x.cat !== t.cat) : [];
   closeSheet();
@@ -1725,7 +1727,14 @@ function motion(v) {
 const rowOf = id => $('#view').querySelector(`[data-edit="${CSS.escape(id)}"]`);
 function moFresh(v, f) {
   const row = rowOf(f.id);
-  if (calm()) return;
+  if (calm()) {   // 手机设了「移除动画」：不弹不飞，打勾还是要出现（淡入淡出）
+    if (f.kind !== 'new') return;
+    const c = document.createElement('div'); c.className = 'mo-check';
+    c.innerHTML = '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    document.body.appendChild(c);
+    c.animate([{ opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 1, offset: .8 }, { opacity: 0 }], { duration: 900 }).finished.then(() => c.remove(), () => c.remove());
+    return;
+  }
   if (f.kind !== 'new') { if (row) row.classList.add('mo-fresh'); return; }
   const chk = document.createElement('div'); chk.className = 'mo-check';
   chk.innerHTML = '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -1939,6 +1948,7 @@ const SFX = (() => {
     cancel() { if (enabled()) tone(260, 200, 0.07, 'sine', 0.2); },
     done() { if (enabled()) { tone(880, 880, 0.07, 'sine', 0.18); tone(1320, 1320, 0.11, 'sine', 0.18, 0.07); } },
     off() { if (enabled()) tone(300, 160, 0.1, 'sine', 0.14); },
+    saved() { if (enabled()) { tone(784, 784, 0.09, 'sine', 0.26); tone(1175, 1175, 0.16, 'sine', 0.26, 0.09); tone(2350, 2350, 0.12, 'triangle', 0.07, 0.1); } },
     menu() { if (enabled()) { tone(520, 980, 0.06, 'sine', 0.24); tone(1200, 1200, 0.03, 'triangle', 0.1, 0.05); } },
     trash() { if (enabled()) tone(520, 140, 0.16, 'triangle', 0.2); },
   };
@@ -2172,7 +2182,7 @@ $('#overlay').addEventListener('click', e => {
   if (b.id === 'e-save') return commitSheet();
   if (b.id === 'e-del') {
     if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = '确定删除？'; return; }
-    const id = draft.id; closeSheet(); deleteTxn(id);
+    const id = draft.id; SFX.trash(); closeSheet(); deleteTxn(id);
   }
 });
 $('#overlay').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') { e.preventDefault(); commitSheet(); } });
@@ -2265,7 +2275,7 @@ guideBox.addEventListener('click', e => {
 });
 
 /* ---------- boot ---------- */
-const APP_VER = '2026-11-19e';
+const APP_VER = '2026-11-20a';
 // 新版：先显示手机里存的上次资料（打开快），再到 Google 拿最新的
 function replayOutbox() {
   for (const { fn, args } of store.get('ledger.outbox') || []) {
