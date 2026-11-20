@@ -531,6 +531,13 @@ body.gate header.top, body.gate nav.bottom { display: none; }
 .gate-opt b { font-size: 1.05rem; } .gate-opt small { color: var(--ink-2); font-size: .85rem; line-height: 1.45; }
 .gate-opt:active { transform: scale(.985); } .gate-opt:disabled { opacity: .5; }
 .gate-busy { margin: 0; }
+.pp-wrap { position: fixed; inset: 0; z-index: 60; background: rgba(20, 14, 10, .45); display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px)); }
+.pp { width: min(560px, 100%); height: min(640px, 82vh); background: var(--surface); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0, 0, 0, .25); }
+.pp-top { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px 10px 18px; border-bottom: 1px solid var(--line); }
+.pp-x { width: 40px; height: 40px; border: 0; border-radius: 12px; background: var(--bg); color: var(--ink); font-size: 1rem; }
+.pp iframe { flex: 1; width: 100%; border: 0; background: var(--bg); }
+.gate-paste { text-align: left; margin: -2px 0 4px; } .gate-paste label { display: block; font-size: .85rem; color: var(--ink-2); margin: 0 2px 6px; }
+.conn-err { margin: 10px 2px 0; padding: 10px 12px; border-radius: 10px; background: var(--warn-bg); color: var(--warn-ink); font-size: .88rem; line-height: 1.5; }
 .money-in input:focus, .money-in input:focus-visible { outline: none; }
 .money-in:focus-within { border-color: var(--accent); }
 .hero-c .h-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: -6px; }
@@ -654,6 +661,22 @@ function apiKey_() {
   return k.length >= 24 ? k : '';
 }
 function keyOk_(k) { var real = apiKey_(); return !!real && String(k || '') === real; }
+/* 用 Google 登录的主屏幕 App：带 Google 的通行证来，核对是这个 App 发的、而且是账本主人本人，才给用。
+ * 不用把连接密码放在网址里。通行证核对过会记 50 分钟，不用每次都问 Google。 */
+var CLIENT_ID = '72413566444-kb3o4p3dqbehd8ddovi9o7pjhl21sp3s.apps.googleusercontent.com';
+function tokenOk_(t) {
+  if (!t) return false;
+  var cache = CacheService.getScriptCache();
+  var key = 'tk' + hex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(t), Utilities.Charset.UTF_8)).slice(0, 40);
+  if (cache.get(key) === '1') return true;
+  var r = UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(t), { muteHttpExceptions: true });
+  if (r.getResponseCode() !== 200) return false;
+  var d = JSON.parse(r.getContentText());
+  var me = String(Session.getEffectiveUser().getEmail() || '').toLowerCase();
+  var ok = d.aud === CLIENT_ID && String(d.email_verified) === 'true' && !!me && String(d.email || '').toLowerCase() === me;
+  if (ok) cache.put(key, '1', Math.max(60, Math.min(3000, (+d.expires_in || 0) - 60)));
+  return ok;
+}
 var API_FNS = {
   getAll: getAll, saveTxn: saveTxn, saveTxns: saveTxns, deleteTxn: deleteTxn, saveSettings: saveSettings,
   saveStatement: saveStatement, payStatement: payStatement, undoStatementPay: undoStatementPay, deleteStatement: deleteStatement,
@@ -663,7 +686,8 @@ function doPost(e) {
   var out;
   try {
     var req = JSON.parse(e.postData.contents);
-    if (!keyOk_(req.k)) throw new Error('连接密码不对，请用新的链接重新打开 App');
+    if (req.t) { if (!tokenOk_(req.t)) throw new Error('NOAUTH：Google 登录过期了，或不是账本主人的帐号'); }
+    else if (!keyOk_(req.k)) throw new Error('连接密码不对，请用新的链接重新打开 App');
     var fn = API_FNS[req.fn];
     if (!fn) throw new Error('没有这个功能：' + req.fn);
     out = { ok: true, result: fn.apply(null, req.args || []) };
@@ -1230,6 +1254,16 @@ let CONN = WEB ? readConn() : null;
 const G = { client: '72413566444-kb3o4p3dqbehd8ddovi9o7pjhl21sp3s.apps.googleusercontent.com', key: 'AIzaSyC8SfgmSHnYFTK6lUAqV7bhe6SiW-XZvDQ', app: '72413566444',
   scope: 'openid email https://www.googleapis.com/auth/drive.file', api: 'https://sheets.googleapis.com/v4/spreadsheets' };
 const isG = () => !!(WEB && CONN && CONN.g);
+// 账本主人（你）：用 Google 登录后认出是主人，就改走自己的 Apps Script（有信用卡、日历提醒）。
+// 这里只放电邮的指纹（SHA-256），不放电邮本身；Apps Script 那边也会再核对一次是不是主人
+const OWNER = { hash: '342bbd37d1cf9c2b104f63fc919d61c5e9d66a1dbdd170a381bdd054eb5870a8', exec: 'https://script.google.com/macros/s/AKfycbw7kNg4jtTohDcl2tuS3QtGvk2qBn4r2ln_mn72FL_YjYCiSCo41Sl6pkx98X_JM0cp/exec' };
+const isOwnerMode = () => !!(isG() && CONN.own);
+const noCard = () => isG() && !CONN.own;   // 朋友的登录版没有信用卡功能
+async function isOwnerEmail(email) {
+  if (!OWNER.hash || !email || !(crypto && crypto.subtle)) return false;
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(email.trim().toLowerCase()));
+  return [...new Uint8Array(d)].map(x => x.toString(16).padStart(2, '0')).join('') === OWNER.hash;
+}
 const gTok = () => { const t = store.get('ledger.gtok'); return t && t.t && t.exp > Date.now() + 60000 ? t.t : null; };
 const gHome = () => location.origin + location.pathname.replace(/index\.html$/, '');
 const authErr = () => Object.assign(new Error('Google 登录过期了'), { offline: true, auth: true });
@@ -1381,13 +1415,19 @@ async function gUse(doc) {
 const OUTBOXABLE = ['saveTxn', 'saveTxns', 'deleteTxn', 'saveSettings'];
 async function webCall(fn, args) {
   if (!CONN) throw new Error('还没连接账本');
-  if (CONN.g) { if (!CONN.id) throw new Error('还没选账本'); return GS.run(CONN.id, fn, args); }
+  if (CONN.g && !CONN.own) { if (!CONN.id) throw new Error('还没选账本'); return GS.run(CONN.id, fn, args); }
+  const own = CONN.g && CONN.own, tok = own ? gTok() : null;
+  if (own && !tok) throw authErr();
   let r;
-  try { r = await fetch(CONN.u, { method: 'POST', body: JSON.stringify({ k: CONN.k, fn, args }) }); }
+  try { r = await fetch(own ? CONN.own : CONN.u, { method: 'POST', body: JSON.stringify(own ? { t: tok, fn, args } : { k: CONN.k, fn, args }) }); }
   catch { const e = new Error(navigator.onLine === false ? '没有网络' : '连不上 Google 的账本（没有网络，或部署的「谁可以访问」不是「任何人」）'); e.offline = true; throw e; }
   let d = null; try { d = await r.json(); } catch {}
   if (!d) throw new Error(`Google 没有回应（${r.status}）`);
-  if (!d.ok) throw new Error(d.error || '出错了');
+  if (!d.ok) {
+    if (own && /^NOAUTH/.test(d.error || '')) { store.set('ledger.gtok', null); throw authErr(); }
+    if (own && /连接密码不对/.test(d.error || '')) throw new Error('电脑上的 Apps Script 还要更新成新的 Code，才能用 Google 登录');
+    throw new Error(d.error || '出错了');
+  }
   return d.result;
 }
 async function flushOutbox() {
@@ -1502,7 +1542,7 @@ function renderHeader() {
   const [y, m] = S.month.split('-');
   $('#m-label').innerHTML = `${y}年${+m}月 <span class="caret" aria-hidden="true">▼</span>`;
   $('#m-next').disabled = S.month >= maxMonth();
-  if ($('#wallets')) $('#wallets').innerHTML = settings().accounts.map(a => a.kind === 'credit' && !isG()
+  if ($('#wallets')) $('#wallets').innerHTML = settings().accounts.map(a => a.kind === 'credit' && !noCard()
     ? (() => { const s = cardStmts(a.id)[0]; const k = s ? stmtStatus(s) : null; const warn = k && k.k !== 'full' && k.k !== 'lateInt' && k.left <= 7;
         return `<button class="wallet link" data-goto="card" aria-label="${esc(a.name)} 还款"><small>${esc(a.name)} 本月刷</small><b>${money(cardSpend(a.id))}${warn ? ' <span class="due-dot">●</span>' : ''}</b></button>`; })()
     : `<div class="wallet"><small>${esc(a.name)}</small><b>${money(balance(a.id))}</b></div>`).join('');
@@ -1797,7 +1837,7 @@ const addDays = (ymd, n) => { const d = new Date(ymd + 'T00:00:00'); d.setDate(d
 const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
 const cnDate = ymd => `${+ymd.slice(5, 7)} 月 ${+ymd.slice(8)} 日`;
 const wdOf = ymd => WD[new Date(ymd + 'T00:00:00').getDay()];
-function creditAcct() { return isG() ? null : settings().accounts.find(a => a.kind === 'credit'); }   // 登录版没有信用卡功能
+function creditAcct() { return noCard() ? null : settings().accounts.find(a => a.kind === 'credit'); }   // 登录版没有信用卡功能
 function cardStmts(acctId) { return (S.stmts || []).filter(s => s.account === acctId).sort((a, b) => b.date.localeCompare(a.date)); }
 function autoMin(amount, cards) { return r2(Math.max(Math.ceil(amount * 5) / 100, 25 * (cards || 1), 0)); }
 function lateFee(amount, cards) { const n = cards || 1; return r2(n * Math.max(10, Math.min(100, amount / n * 0.01))); }
@@ -2255,9 +2295,9 @@ function renderSettings() {
       <span class="dot" style="background:var(--ink-2)"></span>
       <div style="display:grid;gap:4px;min-width:0">
         <input type="text" id="acct-name-${a.id}" data-acctname="${a.id}" value="${esc(a.name)}" aria-label="账户名称">
-        ${a.kind === 'credit' && !isG() ? `<span class="note" style="padding-left:8px">信用卡：还款在信用卡页记，不算支出</span>` : `<label class="note" style="padding-left:8px">期初余额 RM <input inputmode="decimal" id="acct-open-${a.id}" data-acctopen="${a.id}" value="${a.opening}" style="width:7em;display:inline-block" aria-label="期初余额"></label>`}
+        ${a.kind === 'credit' && !noCard() ? `<span class="note" style="padding-left:8px">信用卡：还款在信用卡页记，不算支出</span>` : `<label class="note" style="padding-left:8px">期初余额 RM <input inputmode="decimal" id="acct-open-${a.id}" data-acctopen="${a.id}" value="${a.opening}" style="width:7em;display:inline-block" aria-label="期初余额"></label>`}
       </div>
-      <b class="num">${a.kind === 'credit' && !isG() ? '本月 ' + money(cardSpend(a.id)) : money(balance(a.id))}</b>
+      <b class="num">${a.kind === 'credit' && !noCard() ? '本月 ' + money(cardSpend(a.id)) : money(balance(a.id))}</b>
     </div>`).join('')}
     <div class="addline"><input id="new-acct" placeholder="新账户，例如：Maybank" aria-label="新账户名称"><button class="btn primary" id="add-acct">添加</button></div>
     <p class="note" style="margin-bottom:0">期初余额是第一笔记录之前账户里有多少钱。</p>
@@ -2274,9 +2314,10 @@ function renderSettings() {
     <label class="chk"><input type="checkbox" id="sfx-on" ${SFX.on ? 'checked' : ''}> 音效</label>
     <p class="note" style="margin-bottom:0">长按底部的 ＋ 不放，往上划：内圈选账户，外圈选分类，放手就去输入金额。划回中间的 ✕ 放手是取消。长按一笔记录可以修改或删除。音效走手机的媒体音量，静音模式也会响，不想要就关掉。</p>
   </section>
+  ${WEB && CONN && !CONN.g ? `<section class="card"><h2>Google 帐号</h2><p class="note" style="margin-top:0">现在是用连接链接打开的。改用 Google 登录后，以后换手机只要登录就好。</p><button class="btn" id="g-tologin">改用 Google 登录</button></section>` : ''}
   ${isG() ? `<section class="card"><h2>Google 帐号</h2>
     <p class="note" style="margin-top:0">已登录 <b data-notr>${esc(CONN.email || '')}</b>${CONN.title ? `<br>账本：<span data-notr>${esc(CONN.title)}</span>` : ''}</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="g-switch">换账本</button><button class="btn" id="g-signout">登出</button></div></section>` : ''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${CONN.own ? '' : '<button class="btn" id="g-switch">换账本</button>'}<button class="btn" id="g-signout">登出</button></div></section>` : ''}
   <section class="card"><h2>数据</h2>
     <p class="note" style="margin-top:0">共 ${S.txns.size} 笔记录，存在你自己的 Google Sheet。也可以直接在 Sheet 里看和改，回到 App 会自动重新读取。</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap">${S.sheetUrl ? `<a class="btn" href="${esc(S.sheetUrl)}" target="_blank" rel="noopener" style="text-decoration:none;color:var(--ink)">打开 Google Sheet</a>` : ''}<button class="btn" id="resync">重新读取</button><button class="btn" data-guide="1">新手引导</button></div>
@@ -2538,7 +2579,7 @@ async function moOut(el, done) {
     { duration: 200, easing: EASE, fill: 'forwards' }).finished;
 }
 const TABS = ['home', 'flow', 'budget', 'stats', 'settings', 'card'];
-function go(tab) { S.tab = TABS.includes(tab) && !(tab === 'card' && isG()) ? tab : 'home'; render(); window.scrollTo(0, 0); }
+function go(tab) { S.tab = TABS.includes(tab) && !(tab === 'card' && noCard()) ? tab : 'home'; render(); window.scrollTo(0, 0); }
 function route() { render(); }
 // 左右滑动换页（跟底部的顺序一样）；设置页 / 信用卡页往右滑回首页
 const SWIPE_TABS = ['home', 'flow', 'budget', 'stats'];
@@ -2998,6 +3039,7 @@ $('#view').addEventListener('click', async e => {
   }
   if (b.id === 'resync') { await reload(); toast('已重新读取'); }
   if (b.id === 'g-switch') return gSwitch();
+  if (b.id === 'g-tologin') { if ((store.get('ledger.outbox') || []).length) return toast('还有资料没同步，等有网络同步好再换'); return gLogin('select_account'); }
   if (b.id === 'g-relogin') return gLogin('', CONN.email);
   if (b.id === 'g-signout') return gSignOut();
 });
@@ -3048,7 +3090,7 @@ const HAN = /[\u3400-\u9fff]/;   // 有汉字才需要翻译
 const NUMS = /[+\-−]?RM[\d,]+(?:\.\d+)?|[+\-−]?\d[\d,]*(?:\.\d+)?/g;
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const WKE = { 日: 'Sun', 一: 'Mon', 二: 'Tue', 三: 'Wed', 四: 'Thu', 五: 'Fri', 六: 'Sat' };
-/*I18N*/const I18N_EN = {"首页":"Home","流水":"History","预算":"Budget","分析":"Insights","设置":"Settings","主要页面":"Main pages","记一笔":"Add expense","上个月":"Previous month","下个月":"Next month","选月份":"Pick month","上一年":"Previous year","下一年":"Next year","回到本月":"Back to this month","有记录":"has records","正在读取账本…":"Loading your ledger…","读取失败：":"Could not load: ","再试一次":"Try again","取消":"Cancel","保存":"Save","保存中…":"Saving…","删除":"Delete","修改":"Edit","确定删除？":"Delete for sure?","完成":"Done","返回":"Back","添加":"Add","加":"Add","撤销":"Undo","更新":"Update","有新版本":"New version available","跳过":"Skip","先跳过":"Skip for now","上一步":"Back","‹ 上一步":"‹ Back","下一步":"Next","‹ 返回":"‹ Back","确定":"OK","可不填":"Optional","过路费 / 交通":"Tolls / Transport","吃饭 / 饮料":"Food & Drinks","购物 / 日用品":"Shopping","朋友转账 / AA":"Friends / AA","其他":"Other","收入":"Income","充值 / 账户互转":"Top-up / Transfer","油钱":"Fuel","过路费":"Tolls","吃饭":"Food","购物":"Shopping","朋友转账":"Friends","充值":"Top-up","其他（没单独分配的分类）":"Other (categories without their own budget)","现金":"Cash","路":"T","饭":"F","买":"S","转":"A","其":"O","收":"+","充":"⇄","油":"P","今天":"Today","本月":"Month","看今天或本月":"Show today or this month","今天已花":"Spent today","今天还可以花":"Left for today","今天超出":"Over today","本月预算":"Monthly budget","已经用完":"used up","今天的额度 {0}":"Today's limit {0}","本月已花 {0}":"Month {0}","还剩 {0} 天":"{0} days left","＋ 设个月预算，就能算出每天可以花多少":"＋ Set a monthly budget to see your daily limit","设个月预算":"Set a monthly budget","这个月到现在花了":"Spent this month so far","这个月花了":"Spent this month","结余":"Net","还可以花":"Left to spend","这个月省下":"Saved this month","超出预算":"Over budget","每天约":"About","预算 {0}":"Budget {0}","已用 {0}%":"{0}% used","分类":"Categories","显示全部（{0}）":"Show all ({0})","只看前 {0} 个":"Top {0} only","显示全部":"Show all","每天约可花":"Daily","剩 {0}":"{0} left","超出 {0}":"{0} over","占 {0}%":"{0}% of total","各分类占比":"Share by category","最近":"Recent","全部流水":"See all","这个月还没有记录。点下面的 ＋ 记第一笔。":"No records this month yet. Tap ＋ below to add one.","有":"","笔分类是我猜的，点这里确认":"categories were guessed — tap to check","笔分类是我猜的":"categories were guessed","今天到期":"Due today","记下":"Record","改金额":"Edit amount","这次跳过":"Skip this time","次没处理":"not handled","每月 {0} 号":"Monthly on day {0}","每年 {0} 月 {1} 日":"Yearly on {0}/{1}","已记下":"Recorded","支出":"Expense","搜索商家、备注":"Search shop or note","搜索":"Search","全部分类":"All categories","全部账户":"All accounts","只看这些 ›":"Show only these ›","我猜的":"guessed","分类没错":"Looks right","没有符合条件的记录":"No matching records","这个月还没有记录。点下面的 ＋ 开始。":"No records this month. Tap ＋ below to start.","只搜这个月":"This month only","搜全部月份":"Search all months","全部月份找到":"Found in all months:","{0} 月找到":"Found in month {0}:","笔，支出共 {0}":"records, spent {0}","支出 {0}":"Spent {0}","收入 {0}":"Income {0}","输入这个月的预算":"Enter this month’s budget","每个月沿用同一个预算，填一次就好。":"The same budget repeats every month — set it once.","分配到各分类":"Split by category","已全部分配":"All allocated","还没分配 {0}":"{0} unallocated","还没分配":"Unallocated","已分配":"Allocated","超预算 {0}":"{0} over budget","比例":"Percent","金额":"Amount","删除这一行":"Remove this row","＋ 加一个分类":"＋ Add a category","还没有分配。点下面加一个分类。":"Nothing allocated yet. Add a category below.","已花 {0}":"Spent {0}","还剩 {0}":"{0} left","先填预算":"Set the budget first","剩 {0} 天，每天约可花":"{0} days left, daily about","超出 {0} · {1}%":"{0} over · {1}%","还剩 {0} · {1} 天":"{0} left · {1} days","已花 {0} · {1}%":"Spent {0} · {1}%","预算剩 {0}":"Budget left {0}","没单独设预算":"No budget of its own","钱花在哪":"Where it went","每天支出":"Daily spending","虚线是日均。点柱子看那天的每一笔。":"Dashed line = daily average. Tap a bar to see that day.","日均 {0}":"Daily avg {0}","平日 vs 周末":"Weekdays vs weekends","平日（{0} 天）":"Weekdays ({0} days)","周末（{0} 天）":"Weekends ({0} days)","周末每天比平日多花约 {0}%。":"Weekends cost about {0}% more per day.","平日每天比周末多花约 {0}%。":"Weekdays cost about {0}% more per day.","按账户":"By account","朋友往来":"Friends","按人算的净额。“付”是你转出去比收回来多。":"Net per person. “Paid” means you sent more than you got back.","最大的 {0} 笔":"Top {0} expenses","比上个月 · 对预算":"vs last month · vs budget","每个月一览":"Month by month","全年":"Year","每个月支出":"Monthly spending","月均 {0}":"Monthly avg {0}","全年钱花在哪":"Where it went this year","全年最大的 {0} 笔":"Top {0} of the year","每月平均":"Monthly average","合计":"Total","{0} 年支出":"{0} spending","{0} 年":"{0}","这天没有支出。":"No spending this day.","这一年还没有支出。":"No spending this year yet.","跟上月一样":"Same as last month","{0} 笔":"{0} records","{0} 笔 · 收入 {1}":"{0} records · income {1}","笔":"records","付":"Paid","收 {0}":"Got {0}","不计入收支":"Not counted","新分类名称，例如：油钱":"New category, e.g. Parking","新分类名称":"New category name","分类名称":"Category name","删除分类后，里面的记录会移到“其他”。充值、银行转去 TNG 这种只是换个口袋的钱，勾“不计入收支”。":"Deleting a category moves its records to “Other”. Tick “Not counted” for money that only moves between your own accounts, like top-ups.","账户":"Accounts","账户名称":"Account name","期初余额 RM":"Opening balance RM","期初余额":"Opening balance","新账户，例如：Maybank":"New account, e.g. Maybank","新账户名称":"New account name","期初余额是第一笔记录之前账户里有多少钱。":"Opening balance = money in the account before your first record.","本月 {0}":"This month {0}","信用卡：还款在信用卡页记，不算支出":"Credit card: record payments on the card page (not counted as spending)","固定开销":"Recurring","到期时首页会问你":"Home asks you when due","＋ 加固定开销":"＋ Add recurring","还没有。像电话费、订阅、保险、停车月票，加进来就不会忘记记。":"None yet. Add phone bills, subscriptions, insurance, parking passes — never forget to record them.","语言 Language":"Language","语言":"Language","外观":"Appearance","跟随手机":"System","浅色":"Light","深色":"Dark","信用卡":"Credit card","长按 ＋ 一划记账":"Hold ＋ and swipe","音效":"Sounds","长按底部的 ＋ 不放，往上划：内圈选账户，外圈选分类，放手就去输入金额。划回中间的 ✕ 放手是取消。长按一笔记录可以修改或删除。音效走手机的媒体音量，静音模式也会响，不想要就关掉。":"Hold the ＋ button and swipe up: inner ring picks the account, outer ring the category; let go to enter the amount. Slide back to ✕ to cancel. Long-press a record to edit or delete it. Sounds use media volume and play even in silent mode — turn them off here if you like.","数据":"Data","共 {0} 笔记录，存在你自己的 Google Sheet。也可以直接在 Sheet 里看和改，回到 App 会自动重新读取。":"{0} records, stored in your own Google Sheet. You can view and edit them there; the app reloads when you come back.","打开 Google Sheet":"Open Google Sheet","重新读取":"Reload","新手引导":"Setup guide","颜色 {0}":"Colour {0}","App 版本：{0}":"App version: {0}","主屏幕版":"Home-screen app","还有 {0} 项等网络同步":"{0} items waiting to sync","要先更新 Apps Script 里的 Code 才能用这个功能。":"Update the Code in Apps Script to use this.","输入金额":"Enter amount","选分类":"Pick a category","点一下就进下一步":"Tap one to continue","补细节（可不填）":"Details (optional)","补细节":"Details","编辑记录":"Edit record","商家 / 说明":"Shop / note","可不填，例如：Restoran Kem Leng":"Optional, e.g. Restoran Kem Leng","日期":"Date","备注":"Note","原始记录：":"Original: ","全部清除":"Clear","减":"Minus","小数点":"Decimal point","第 {0} 步，共 {1} 步":"Step {0} of {1}","同一商家的另外 {0} 笔也改成这个分类":"Also change the other {0} records from this shop","总数要大于 0":"Total must be more than 0","先输入金额":"Enter an amount first","先选分类":"Pick a category first","记好了":"Saved","已保存":"Saved","已删除":"Deleted","已恢复":"Restored","已撤销":"Undone","（没网络，有网络会自动同步）":" (offline — will sync later)","已保存，另外 {0} 笔也改了":"Saved, {0} more records changed too","没存上：":"Not saved: ","删除失败：":"Delete failed: ","同步失败：":"Sync failed: ","账本还在读取":"Still loading","设置没存上：":"Settings not saved: ","预算已保存":"Budget saved","分类已添加":"Category added","账户已添加":"Account added","已删除（以前记下的账不会删）":"Deleted (past records stay)","音效已打开":"Sounds on","音效已关掉":"Sounds off","已重新读取":"Reloaded","没有网络，先存在手机里，有网络会自动同步":"Offline — saved on this phone, will sync later","没有网络，显示的是上次的资料":"Offline — showing your last data","没有网络":"No connection","往上划":"Swipe up","放手去输入金额":"Let go to enter the amount","放手取消":"Let go to cancel","往上划选账户和分类":"Swipe up to pick account and category","滑到外圈的分类，放手":"Slide to a category, let go","外圈选分类":"outer ring: category","加固定开销":"Add recurring","修改固定开销":"Edit recurring","名称":"Name","例如：Maxis 月费、Netflix、保险":"e.g. Maxis, Netflix, insurance","金额（每次）":"Amount (each time)","从哪个账户":"From account","多久一次":"How often","每月":"Monthly","每周":"Weekly","每年":"Yearly","每月几号":"Day of month","星期几":"Day of week","哪一天":"Which day","下次到期：":"Next due: ","先填名称":"Enter a name first","先填金额":"Enter an amount first","没有这一天的月份会算在月底。":"Months without this day use the last day.","到期那天首页会出现提醒，按「记下」才会记账。":"On the due day Home shows a reminder; it is only recorded when you tap “Record”.","下次 {0} 月 {1} 日":"next {0}/{1}","已保存，下次 {0}":"Saved, next {0}","欢迎使用记账":"Welcome to Ledger","先选你平常会花钱的分类。之后随时可以在「设置」里改。":"Pick the categories you usually spend on. You can change them any time in Settings.","自己加一个，例如：健身":"Add your own, e.g. Gym","自己加分类":"Add your own category","每个月大概想花多少？":"How much do you want to spend each month?","填了预算，首页就能算出「今天还可以花多少」。不想设可以先跳过。":"With a budget, Home can show how much you can still spend today. You can skip this.","例如：1500":"e.g. 1500","每月预算":"Monthly budget","你最常用哪里付钱？":"Where do you usually pay from?","现金、TNG、银行卡都可以，之后还能再加。":"Cash, e-wallet or bank card — you can add more later.","例如：现金、TNG eWallet":"e.g. Cash, TNG eWallet","现在里面有多少钱（可不填）":"Current balance (optional)","开始记账":"Start","设置好了，按下面的 ＋ 记第一笔吧":"All set — tap ＋ below to add your first expense","停车":"Parking","咖啡":"Coffee","网购":"Online shopping","房租":"Rent","水电":"Utilities","话费":"Phone bill","孩子":"Kids","宠物":"Pets","保险":"Insurance","娱乐":"Fun","旅行":"Travel","连接你的账本":"Connect your ledger","第一次用要连接 Google Sheet。请用我给你的那条链接打开，或把整条链接贴在下面。":"First time: connect to your Google Sheet. Open the link you were given, or paste the whole link below.","贴上链接":"Paste link","连接链接":"Connection link","连接":"Connect","链接不完整，要包含 # 后面的部分":"Link is incomplete — it must include the part after #","链接不对，请再检查一下":"That link doesn’t look right","还没连接账本":"Not connected yet","出错了":"Something went wrong","连不上 Google 的账本（没有网络，或部署的「谁可以访问」不是「任何人」）":"Can’t reach your Google ledger (offline, or the deployment isn’t set to “Anyone”)","几个小技巧":"A few tips","随时可以在「设置 → 新手引导」再看一次。":"You can see these again any time in Settings → Setup guide.","长按 ＋ 往上划":"Hold ＋ and swipe up","出现半圆：内圈选账户，外圈选分类，放手就去输入金额。":"A half circle appears: inner ring picks the account, outer ring the category. Let go to enter the amount.","「最近」往左滑一笔":"Swipe a recent record left","出现「修改」和「删除」，滑到底直接删除。":"Shows Edit and Delete. Swipe all the way to delete.","长按一笔记录":"Long-press a record","跳出小选单，可以修改或删除。":"A small menu pops up to edit or delete it.","左右滑动画面":"Swipe left or right","换页：首页、流水、预算、分析。":"Switch pages: Home, History, Budget, Insights.","记账":"Ledger","用 Google 登录":"Sign in with Google","‹ 用 Google 登录":"‹ Sign in with Google","隐私政策":"Privacy policy","我有连接链接":"I have a connection link","简单好用的记账 App。记录存在你自己的 Google Drive，只有你看得到。":"A simple expense tracker. Your records live in your own Google Drive — only you can see them.","登录后可以选你原本在用的记账 Google Sheet，或新建一个。":"After signing in, choose the ledger Sheet you already use, or create a new one. ","选一个账本":"Choose a ledger","已登录":"Signed in as","账本：":"Ledger: ","用我原本的账本":"Use my existing ledger","选你以前在用的那个记账 Google Sheet，以前的记录都在":"Pick the Google Sheet you already use — all your records come with it","新建一个账本":"Create a new ledger","在你的 Google Drive 建一个新的「记账」Sheet":"Makes a new “Ledger” Sheet in your Google Drive","换一个 Google 帐号":"Use another Google account","要重新登录":"Please sign in again","Google 登录过期了。按下面重新登录，你的记录都还在。":"Your Google sign-in has expired. Sign in again below — your records are safe.","正在打开你的 Google Drive…":"Opening your Google Drive…","正在建立账本…":"Creating your ledger…","正在登录…":"Signing in…","Google 帐号":"Google account","换账本":"Switch ledger","登出":"Sign out","还有 {0} 项没同步，再按一次就会丢掉":"{0} items not synced yet — tap again to discard them","Google 登录过期了，先存在手机里":"Google sign-in expired — saved on this phone for now","重新登录":"Sign in again","重新登录 ›":"Sign in again ›","Google 登录过期了，还有 {0} 项没同步":"Google sign-in expired, {0} items not synced","Google 登录过期了":"Google sign-in expired","Google 登录没有成功，请再试一次":"Google sign-in didn’t work — please try again","选你原本记账的 Google Sheet":"Pick your ledger Google Sheet","这个 Sheet 不是记账的账本（找不到「交易」分页）":"This Sheet isn’t a ledger (no “交易” tab)","打不开这个 Google Sheet（可能被删除了，或要重新选一次）":"Can’t open this Google Sheet (it may be deleted — try choosing it again)","打不开 Google 的选择器，请检查网络":"Couldn’t open the Google picker — check your connection","连不上 Google":"Can’t reach Google","还没选账本":"No ledger chosen yet","信用卡设定":"Card settings","额度":"Credit limit","年利率（看结单）":"Interest rate (see statement)","卡数（主卡算最低还款用）":"Number of cards","免息期":"Interest-free","最低还款":"Minimum payment","迟还费":"Late fee","利率":"Interest","最迟还款日":"Payment due","新结单":"New statement","＋ 新结单":"＋ New statement","结单日":"Statement date","结单金额（全额）":"Statement amount (full)","修改结单":"Edit statement","结单记录":"Statements","结单已保存":"Statement saved","已删除结单":"Statement deleted","还了全额":"Paid in full","还了剩下":"Paid the rest","还了最低":"Paid minimum","其他金额":"Other amount","还了多少":"Amount paid","撤销还款记录":"Undo payment records","已还清":"Paid off","这期已经还清了":"This statement is already paid","已还清，日历提醒已关掉":"Paid off — calendar reminder turned off","已撤销还款":"Payment undone","还没有结单。结单出来后按下面输入金额，截止日会自动算。":"No statement yet. When it arrives, enter the amount below; the due date is calculated for you.","还没有信用卡账户。到设置里加一个账户，类型选信用卡。":"No credit card account yet.","全额（还清不会有利息）":"Full amount (no interest if paid)","已还最低":"Minimum paid","已过截止日":"Past due","下一期（预估）":"Next statement (estimate)","预计最迟还款日":"Expected due date","就是今天":"Today","规则":"Rules","张":"cards","结单日起 {0} 天，全额还清才免息":"{0} days from statement; only interest-free if paid in full","欠款 {0}% 或 {1}，取较高（每张卡分开算）":"{0}% of balance or {1}, whichever is higher (per card)","没还最低：{0}%，最低 {1}，最高 {2}":"Minimum not paid: {0}%, min {1}, max {2}","{0} 个月都准时 {1}% · {2}/{3} 个月 {4}% · 其他 {5}%":"{0} months on time {1}% · {2}/{3} months {4}% · otherwise {5}%","（自动 +{0} 天）":"(auto +{0} days)","（自动算，结单上写的为准）":"(auto — follow your statement)","最低 {0}":"min {0}","至少要还":"Pay at least","。到期那天首页会出现提醒，按「记下」才会记账。":". On the due day Home reminds you; it is only recorded when you tap “Record”.","。到期那天首页会出现提醒，按「记下」才会记账。没有这一天的月份会算在月底。":". On the due day Home reminds you; it is only recorded when you tap “Record”. Months without this day use the last day.","{0} 号":"Day {0}","{0} 天，平均每天 {1}":"{0} days, {1}/day avg","每天约 {0}":"About {0}/day","结单":"Statement","上个月的资料如果不完整，比较只能参考。":"If last month’s data is incomplete, treat this as a rough guide.","（自动 {0} 天）":"(auto {0} days)","＋":"＋","－":"－","⌫":"⌫"};/*I18N_END*/   // 句子 → 英文（数字用 {0} {1} 代替；内容来自 i18n/en.py）
+/*I18N*/const I18N_EN = {"首页":"Home","流水":"History","预算":"Budget","分析":"Insights","设置":"Settings","主要页面":"Main pages","记一笔":"Add expense","上个月":"Previous month","下个月":"Next month","选月份":"Pick month","上一年":"Previous year","下一年":"Next year","回到本月":"Back to this month","有记录":"has records","正在读取账本…":"Loading your ledger…","读取失败：":"Could not load: ","再试一次":"Try again","取消":"Cancel","保存":"Save","保存中…":"Saving…","删除":"Delete","修改":"Edit","确定删除？":"Delete for sure?","完成":"Done","返回":"Back","添加":"Add","加":"Add","撤销":"Undo","更新":"Update","有新版本":"New version available","跳过":"Skip","先跳过":"Skip for now","上一步":"Back","‹ 上一步":"‹ Back","下一步":"Next","‹ 返回":"‹ Back","确定":"OK","可不填":"Optional","过路费 / 交通":"Tolls / Transport","吃饭 / 饮料":"Food & Drinks","购物 / 日用品":"Shopping","朋友转账 / AA":"Friends / AA","其他":"Other","收入":"Income","充值 / 账户互转":"Top-up / Transfer","油钱":"Fuel","过路费":"Tolls","吃饭":"Food","购物":"Shopping","朋友转账":"Friends","充值":"Top-up","其他（没单独分配的分类）":"Other (categories without their own budget)","现金":"Cash","路":"T","饭":"F","买":"S","转":"A","其":"O","收":"+","充":"⇄","油":"P","今天":"Today","本月":"Month","看今天或本月":"Show today or this month","今天已花":"Spent today","今天还可以花":"Left for today","今天超出":"Over today","本月预算":"Monthly budget","已经用完":"used up","今天的额度 {0}":"Today's limit {0}","本月已花 {0}":"Month {0}","还剩 {0} 天":"{0} days left","＋ 设个月预算，就能算出每天可以花多少":"＋ Set a monthly budget to see your daily limit","设个月预算":"Set a monthly budget","这个月到现在花了":"Spent this month so far","这个月花了":"Spent this month","结余":"Net","还可以花":"Left to spend","这个月省下":"Saved this month","超出预算":"Over budget","每天约":"About","预算 {0}":"Budget {0}","已用 {0}%":"{0}% used","分类":"Categories","显示全部（{0}）":"Show all ({0})","只看前 {0} 个":"Top {0} only","显示全部":"Show all","每天约可花":"Daily","剩 {0}":"{0} left","超出 {0}":"{0} over","占 {0}%":"{0}% of total","各分类占比":"Share by category","最近":"Recent","全部流水":"See all","这个月还没有记录。点下面的 ＋ 记第一笔。":"No records this month yet. Tap ＋ below to add one.","有":"","笔分类是我猜的，点这里确认":"categories were guessed — tap to check","笔分类是我猜的":"categories were guessed","今天到期":"Due today","记下":"Record","改金额":"Edit amount","这次跳过":"Skip this time","次没处理":"not handled","每月 {0} 号":"Monthly on day {0}","每年 {0} 月 {1} 日":"Yearly on {0}/{1}","已记下":"Recorded","支出":"Expense","搜索商家、备注":"Search shop or note","搜索":"Search","全部分类":"All categories","全部账户":"All accounts","只看这些 ›":"Show only these ›","我猜的":"guessed","分类没错":"Looks right","没有符合条件的记录":"No matching records","这个月还没有记录。点下面的 ＋ 开始。":"No records this month. Tap ＋ below to start.","只搜这个月":"This month only","搜全部月份":"Search all months","全部月份找到":"Found in all months:","{0} 月找到":"Found in month {0}:","笔，支出共 {0}":"records, spent {0}","支出 {0}":"Spent {0}","收入 {0}":"Income {0}","输入这个月的预算":"Enter this month’s budget","每个月沿用同一个预算，填一次就好。":"The same budget repeats every month — set it once.","分配到各分类":"Split by category","已全部分配":"All allocated","还没分配 {0}":"{0} unallocated","还没分配":"Unallocated","已分配":"Allocated","超预算 {0}":"{0} over budget","比例":"Percent","金额":"Amount","删除这一行":"Remove this row","＋ 加一个分类":"＋ Add a category","还没有分配。点下面加一个分类。":"Nothing allocated yet. Add a category below.","已花 {0}":"Spent {0}","还剩 {0}":"{0} left","先填预算":"Set the budget first","剩 {0} 天，每天约可花":"{0} days left, daily about","超出 {0} · {1}%":"{0} over · {1}%","还剩 {0} · {1} 天":"{0} left · {1} days","已花 {0} · {1}%":"Spent {0} · {1}%","预算剩 {0}":"Budget left {0}","没单独设预算":"No budget of its own","钱花在哪":"Where it went","每天支出":"Daily spending","虚线是日均。点柱子看那天的每一笔。":"Dashed line = daily average. Tap a bar to see that day.","日均 {0}":"Daily avg {0}","平日 vs 周末":"Weekdays vs weekends","平日（{0} 天）":"Weekdays ({0} days)","周末（{0} 天）":"Weekends ({0} days)","周末每天比平日多花约 {0}%。":"Weekends cost about {0}% more per day.","平日每天比周末多花约 {0}%。":"Weekdays cost about {0}% more per day.","按账户":"By account","朋友往来":"Friends","按人算的净额。“付”是你转出去比收回来多。":"Net per person. “Paid” means you sent more than you got back.","最大的 {0} 笔":"Top {0} expenses","比上个月 · 对预算":"vs last month · vs budget","每个月一览":"Month by month","全年":"Year","每个月支出":"Monthly spending","月均 {0}":"Monthly avg {0}","全年钱花在哪":"Where it went this year","全年最大的 {0} 笔":"Top {0} of the year","每月平均":"Monthly average","合计":"Total","{0} 年支出":"{0} spending","{0} 年":"{0}","这天没有支出。":"No spending this day.","这一年还没有支出。":"No spending this year yet.","跟上月一样":"Same as last month","{0} 笔":"{0} records","{0} 笔 · 收入 {1}":"{0} records · income {1}","笔":"records","付":"Paid","收 {0}":"Got {0}","不计入收支":"Not counted","新分类名称，例如：油钱":"New category, e.g. Parking","新分类名称":"New category name","分类名称":"Category name","删除分类后，里面的记录会移到“其他”。充值、银行转去 TNG 这种只是换个口袋的钱，勾“不计入收支”。":"Deleting a category moves its records to “Other”. Tick “Not counted” for money that only moves between your own accounts, like top-ups.","账户":"Accounts","账户名称":"Account name","期初余额 RM":"Opening balance RM","期初余额":"Opening balance","新账户，例如：Maybank":"New account, e.g. Maybank","新账户名称":"New account name","期初余额是第一笔记录之前账户里有多少钱。":"Opening balance = money in the account before your first record.","本月 {0}":"This month {0}","信用卡：还款在信用卡页记，不算支出":"Credit card: record payments on the card page (not counted as spending)","固定开销":"Recurring","到期时首页会问你":"Home asks you when due","＋ 加固定开销":"＋ Add recurring","还没有。像电话费、订阅、保险、停车月票，加进来就不会忘记记。":"None yet. Add phone bills, subscriptions, insurance, parking passes — never forget to record them.","语言 Language":"Language","语言":"Language","外观":"Appearance","跟随手机":"System","浅色":"Light","深色":"Dark","信用卡":"Credit card","长按 ＋ 一划记账":"Hold ＋ and swipe","音效":"Sounds","长按底部的 ＋ 不放，往上划：内圈选账户，外圈选分类，放手就去输入金额。划回中间的 ✕ 放手是取消。长按一笔记录可以修改或删除。音效走手机的媒体音量，静音模式也会响，不想要就关掉。":"Hold the ＋ button and swipe up: inner ring picks the account, outer ring the category; let go to enter the amount. Slide back to ✕ to cancel. Long-press a record to edit or delete it. Sounds use media volume and play even in silent mode — turn them off here if you like.","数据":"Data","共 {0} 笔记录，存在你自己的 Google Sheet。也可以直接在 Sheet 里看和改，回到 App 会自动重新读取。":"{0} records, stored in your own Google Sheet. You can view and edit them there; the app reloads when you come back.","打开 Google Sheet":"Open Google Sheet","重新读取":"Reload","新手引导":"Setup guide","颜色 {0}":"Colour {0}","App 版本：{0}":"App version: {0}","主屏幕版":"Home-screen app","还有 {0} 项等网络同步":"{0} items waiting to sync","要先更新 Apps Script 里的 Code 才能用这个功能。":"Update the Code in Apps Script to use this.","输入金额":"Enter amount","选分类":"Pick a category","点一下就进下一步":"Tap one to continue","补细节（可不填）":"Details (optional)","补细节":"Details","编辑记录":"Edit record","商家 / 说明":"Shop / note","可不填，例如：Restoran Kem Leng":"Optional, e.g. Restoran Kem Leng","日期":"Date","备注":"Note","原始记录：":"Original: ","全部清除":"Clear","减":"Minus","小数点":"Decimal point","第 {0} 步，共 {1} 步":"Step {0} of {1}","同一商家的另外 {0} 笔也改成这个分类":"Also change the other {0} records from this shop","总数要大于 0":"Total must be more than 0","先输入金额":"Enter an amount first","先选分类":"Pick a category first","记好了":"Saved","已保存":"Saved","已删除":"Deleted","已恢复":"Restored","已撤销":"Undone","（没网络，有网络会自动同步）":" (offline — will sync later)","已保存，另外 {0} 笔也改了":"Saved, {0} more records changed too","没存上：":"Not saved: ","删除失败：":"Delete failed: ","同步失败：":"Sync failed: ","账本还在读取":"Still loading","设置没存上：":"Settings not saved: ","预算已保存":"Budget saved","分类已添加":"Category added","账户已添加":"Account added","已删除（以前记下的账不会删）":"Deleted (past records stay)","音效已打开":"Sounds on","音效已关掉":"Sounds off","已重新读取":"Reloaded","没有网络，先存在手机里，有网络会自动同步":"Offline — saved on this phone, will sync later","没有网络，显示的是上次的资料":"Offline — showing your last data","没有网络":"No connection","往上划":"Swipe up","放手去输入金额":"Let go to enter the amount","放手取消":"Let go to cancel","往上划选账户和分类":"Swipe up to pick account and category","滑到外圈的分类，放手":"Slide to a category, let go","外圈选分类":"outer ring: category","加固定开销":"Add recurring","修改固定开销":"Edit recurring","名称":"Name","例如：Maxis 月费、Netflix、保险":"e.g. Maxis, Netflix, insurance","金额（每次）":"Amount (each time)","从哪个账户":"From account","多久一次":"How often","每月":"Monthly","每周":"Weekly","每年":"Yearly","每月几号":"Day of month","星期几":"Day of week","哪一天":"Which day","下次到期：":"Next due: ","先填名称":"Enter a name first","先填金额":"Enter an amount first","没有这一天的月份会算在月底。":"Months without this day use the last day.","到期那天首页会出现提醒，按「记下」才会记账。":"On the due day Home shows a reminder; it is only recorded when you tap “Record”.","下次 {0} 月 {1} 日":"next {0}/{1}","已保存，下次 {0}":"Saved, next {0}","欢迎使用记账":"Welcome to Ledger","先选你平常会花钱的分类。之后随时可以在「设置」里改。":"Pick the categories you usually spend on. You can change them any time in Settings.","自己加一个，例如：健身":"Add your own, e.g. Gym","自己加分类":"Add your own category","每个月大概想花多少？":"How much do you want to spend each month?","填了预算，首页就能算出「今天还可以花多少」。不想设可以先跳过。":"With a budget, Home can show how much you can still spend today. You can skip this.","例如：1500":"e.g. 1500","每月预算":"Monthly budget","你最常用哪里付钱？":"Where do you usually pay from?","现金、TNG、银行卡都可以，之后还能再加。":"Cash, e-wallet or bank card — you can add more later.","例如：现金、TNG eWallet":"e.g. Cash, TNG eWallet","现在里面有多少钱（可不填）":"Current balance (optional)","开始记账":"Start","设置好了，按下面的 ＋ 记第一笔吧":"All set — tap ＋ below to add your first expense","停车":"Parking","咖啡":"Coffee","网购":"Online shopping","房租":"Rent","水电":"Utilities","话费":"Phone bill","孩子":"Kids","宠物":"Pets","保险":"Insurance","娱乐":"Fun","旅行":"Travel","连接你的账本":"Connect your ledger","第一次用要连接 Google Sheet。请用我给你的那条链接打开，或把整条链接贴在下面。":"First time: connect to your Google Sheet. Open the link you were given, or paste the whole link below.","贴上链接":"Paste link","连接链接":"Connection link","连接":"Connect","链接不完整，要包含 # 后面的部分":"Link is incomplete — it must include the part after #","链接不对，请再检查一下":"That link doesn’t look right","还没连接账本":"Not connected yet","这是 Google Sheet 的网址，不是连接链接。按下面「用 Google 登录」，再选这个 Sheet 就可以。":"That’s a Google Sheet address, not a connection link. Tap “Sign in with Google” below, then choose this Sheet.","这是 Apps Script 的网址，少了连接密码。要贴完整的连接链接（github.io 开头）":"That’s an Apps Script address without the key. Paste the full connection link (starting with github.io).","出错了":"Something went wrong","连不上 Google 的账本（没有网络，或部署的「谁可以访问」不是「任何人」）":"Can’t reach your Google ledger (offline, or the deployment isn’t set to “Anyone”)","几个小技巧":"A few tips","随时可以在「设置 → 新手引导」再看一次。":"You can see these again any time in Settings → Setup guide.","长按 ＋ 往上划":"Hold ＋ and swipe up","出现半圆：内圈选账户，外圈选分类，放手就去输入金额。":"A half circle appears: inner ring picks the account, outer ring the category. Let go to enter the amount.","「最近」往左滑一笔":"Swipe a recent record left","出现「修改」和「删除」，滑到底直接删除。":"Shows Edit and Delete. Swipe all the way to delete.","长按一笔记录":"Long-press a record","跳出小选单，可以修改或删除。":"A small menu pops up to edit or delete it.","左右滑动画面":"Swipe left or right","换页：首页、流水、预算、分析。":"Switch pages: Home, History, Budget, Insights.","记账":"Ledger","用 Google 登录":"Sign in with Google","‹ 用 Google 登录":"‹ Sign in with Google","隐私政策":"Privacy policy","我有连接链接":"I have a connection link","简单好用的记账 App。记录存在你自己的 Google Drive，只有你看得到。":"A simple expense tracker. Your records live in your own Google Drive — only you can see them.","登录后可以选你原本在用的记账 Google Sheet，或新建一个。":"After signing in, choose the ledger Sheet you already use, or create a new one. ","选一个账本":"Choose a ledger","已登录":"Signed in as","账本：":"Ledger: ","用我原本的账本":"Use my existing ledger","选你以前在用的那个记账 Google Sheet，以前的记录都在":"Pick the Google Sheet you already use — all your records come with it","新建一个账本":"Create a new ledger","在你的 Google Drive 建一个新的「记账」Sheet":"Makes a new “Ledger” Sheet in your Google Drive","换一个 Google 帐号":"Use another Google account","要重新登录":"Please sign in again","Google 登录过期了。按下面重新登录，你的记录都还在。":"Your Google sign-in has expired. Sign in again below — your records are safe.","正在打开你的 Google Drive…":"Opening your Google Drive…","正在建立账本…":"Creating your ledger…","正在登录…":"Signing in…","Google 帐号":"Google account","关闭":"Close","现在是用连接链接打开的。改用 Google 登录后，以后换手机只要登录就好。":"You opened this with a connection link. Switch to Google sign-in and a new phone only needs you to sign in.","改用 Google 登录":"Switch to Google sign-in","还有资料没同步，等有网络同步好再换":"Some records haven’t synced yet — switch after they sync","电脑上的 Apps Script 还要更新成新的 Code，才能用 Google 登录":"Update the Code in Apps Script first to use Google sign-in","或者贴上旧账本的 Google Sheet 链接":"Or paste the link of your old ledger Sheet","旧账本的链接":"Old ledger link","打开":"Open","这不是 Google Sheet 的链接。请在电脑或手机打开你的记账 Sheet，复制网址贴在这里":"That isn’t a Google Sheet link. Open your ledger Sheet, copy its address and paste it here.","正在打开账本…":"Opening your ledger…","请在 Google 的视窗按「选择」，允许 App 打开这个账本":"In the Google window, tap “Select” to let the app open this ledger","换账本":"Switch ledger","登出":"Sign out","还有 {0} 项没同步，再按一次就会丢掉":"{0} items not synced yet — tap again to discard them","Google 登录过期了，先存在手机里":"Google sign-in expired — saved on this phone for now","重新登录":"Sign in again","重新登录 ›":"Sign in again ›","Google 登录过期了，还有 {0} 项没同步":"Google sign-in expired, {0} items not synced","Google 登录过期了":"Google sign-in expired","Google 登录没有成功，请再试一次":"Google sign-in didn’t work — please try again","选你原本记账的 Google Sheet":"Pick your ledger Google Sheet","这个 Sheet 不是记账的账本（找不到「交易」分页）":"This Sheet isn’t a ledger (no “交易” tab)","打不开这个 Google Sheet（可能被删除了，或要重新选一次）":"Can’t open this Google Sheet (it may be deleted — try choosing it again)","打不开 Google 的选择器，请检查网络":"Couldn’t open the Google picker — check your connection","连不上 Google":"Can’t reach Google","还没选账本":"No ledger chosen yet","信用卡设定":"Card settings","额度":"Credit limit","年利率（看结单）":"Interest rate (see statement)","卡数（主卡算最低还款用）":"Number of cards","免息期":"Interest-free","最低还款":"Minimum payment","迟还费":"Late fee","利率":"Interest","最迟还款日":"Payment due","新结单":"New statement","＋ 新结单":"＋ New statement","结单日":"Statement date","结单金额（全额）":"Statement amount (full)","修改结单":"Edit statement","结单记录":"Statements","结单已保存":"Statement saved","已删除结单":"Statement deleted","还了全额":"Paid in full","还了剩下":"Paid the rest","还了最低":"Paid minimum","其他金额":"Other amount","还了多少":"Amount paid","撤销还款记录":"Undo payment records","已还清":"Paid off","这期已经还清了":"This statement is already paid","已还清，日历提醒已关掉":"Paid off — calendar reminder turned off","已撤销还款":"Payment undone","还没有结单。结单出来后按下面输入金额，截止日会自动算。":"No statement yet. When it arrives, enter the amount below; the due date is calculated for you.","还没有信用卡账户。到设置里加一个账户，类型选信用卡。":"No credit card account yet.","全额（还清不会有利息）":"Full amount (no interest if paid)","已还最低":"Minimum paid","已过截止日":"Past due","下一期（预估）":"Next statement (estimate)","预计最迟还款日":"Expected due date","就是今天":"Today","规则":"Rules","张":"cards","结单日起 {0} 天，全额还清才免息":"{0} days from statement; only interest-free if paid in full","欠款 {0}% 或 {1}，取较高（每张卡分开算）":"{0}% of balance or {1}, whichever is higher (per card)","没还最低：{0}%，最低 {1}，最高 {2}":"Minimum not paid: {0}%, min {1}, max {2}","{0} 个月都准时 {1}% · {2}/{3} 个月 {4}% · 其他 {5}%":"{0} months on time {1}% · {2}/{3} months {4}% · otherwise {5}%","（自动 +{0} 天）":"(auto +{0} days)","（自动算，结单上写的为准）":"(auto — follow your statement)","最低 {0}":"min {0}","至少要还":"Pay at least","。到期那天首页会出现提醒，按「记下」才会记账。":". On the due day Home reminds you; it is only recorded when you tap “Record”.","。到期那天首页会出现提醒，按「记下」才会记账。没有这一天的月份会算在月底。":". On the due day Home reminds you; it is only recorded when you tap “Record”. Months without this day use the last day.","{0} 号":"Day {0}","{0} 天，平均每天 {1}":"{0} days, {1}/day avg","每天约 {0}":"About {0}/day","结单":"Statement","上个月的资料如果不完整，比较只能参考。":"If last month’s data is incomplete, treat this as a rough guide.","（自动 {0} 天）":"(auto {0} days)","＋":"＋","－":"－","⌫":"⌫"};/*I18N_END*/   // 句子 → 英文（数字用 {0} {1} 代替；内容来自 i18n/en.py）
 /*RULES*/const I18N_RULES = [[/^(.+)这次跳过了$/, (_, d) => 'Skipped ' + tr(d)],
   [/^(\d{4})年(\d{1,2})月$/, (_, y, m) => MON[m - 1] + ' ' + y],
   [/^(\d{1,2})月$/, (_, m) => MON[m - 1]],
@@ -3188,7 +3230,7 @@ guideBox.addEventListener('click', e => {
 });
 
 /* ---------- boot ---------- */
-const APP_VER = '2026-11-20e';
+const APP_VER = '2026-11-20i';
 // 新版：先显示手机里存的上次资料（打开快），再到 Google 拿最新的
 function replayOutbox() {
   for (const { fn, args } of store.get('ledger.outbox') || []) {
@@ -3197,20 +3239,6 @@ function replayOutbox() {
     else if (fn === 'deleteTxn') S.txns.delete(args[0]);
     else if (fn === 'saveSettings') S.settings = { ...DEFAULT_SETTINGS, ...args[0] };
   }
-}
-function showConnect() {
-  $('#view').innerHTML = `<section class="card"><h2>连接你的账本</h2>
-    <p class="note" style="margin-top:0">第一次用要连接 Google Sheet。请用我给你的那条链接打开，或把整条链接贴在下面。</p>
-    <div class="addline"><input id="conn-in" placeholder="贴上链接" aria-label="连接链接"><button class="btn primary" id="conn-ok">连接</button></div>
-    <button class="linkbtn" id="conn-back" style="margin-top:12px">‹ 用 Google 登录</button></section>`;
-  $('#conn-back').onclick = () => showGate('welcome');
-  $('#conn-ok').onclick = () => {
-    const v = $('#conn-in').value.trim(), i = v.indexOf('#');
-    if (i < 0) return toast('链接不完整，要包含 # 后面的部分');
-    location.hash = v.slice(i + 1); CONN = readConn();
-    if (!CONN) return toast('链接不对，请再检查一下');
-    bootWeb();
-  };
 }
 async function checkUpdate() {
   try {
@@ -3227,6 +3255,9 @@ function showGate(kind) {
   if (kind === 'pick') v.innerHTML = `<section class="gate-box">
       <h1>选一个账本</h1><p class="note">已登录 <b data-notr>${esc(email)}</b></p>
       <button class="gate-opt" id="g-pick"><b>用我原本的账本</b><small>选你以前在用的那个记账 Google Sheet，以前的记录都在</small></button>
+      <div class="gate-paste"><label for="g-url">或者贴上旧账本的 Google Sheet 链接</label>
+        <div class="addline"><input id="g-url" inputmode="url" placeholder="https://docs.google.com/spreadsheets/…" aria-label="旧账本的链接"><button class="btn primary" id="g-open">打开</button></div>
+        <p class="conn-err" id="g-err" role="alert" hidden></p></div>
       <button class="gate-opt" id="g-new"><b>新建一个账本</b><small>在你的 Google Drive 建一个新的「记账」Sheet</small></button>
       <p class="note gate-busy" id="g-busy" hidden></p>
       <button class="linkbtn" id="g-out">换一个 Google 帐号</button></section>`;
@@ -3238,21 +3269,44 @@ function showGate(kind) {
       <img class="gate-ico" src="icon-192.png" alt="" onerror="this.remove()">
       <h1>记账</h1><p class="note">简单好用的记账 App。记录存在你自己的 Google Drive，只有你看得到。</p>
       <button class="btn gbtn" id="g-login">${G_LOGO}<span>用 Google 登录</span></button>
-      <p class="note gate-small">登录后可以选你原本在用的记账 Google Sheet，或新建一个。<a href="privacy.html" target="_blank" rel="noopener">隐私政策</a></p>
-      ${langSeg()}
-      <button class="linkbtn" id="g-link">我有连接链接</button></section>`;
+      <p class="note gate-small">登录后可以选你原本在用的记账 Google Sheet，或新建一个。<a href="privacy.html" id="g-privacy">隐私政策</a></p>
+      ${langSeg()}</section>`;
   const on = (id, fn) => { const b = $('#' + id); if (b) b.onclick = fn; };
   on('g-login', () => gLogin(kind === 'relogin' ? '' : 'select_account', kind === 'relogin' ? email : ''));
-  on('g-link', () => { document.body.classList.remove('gate'); showConnect(); });
   on('g-out', () => gSignOut(true));
+  const pl = $('#g-privacy'); if (pl) pl.onclick = e => { e.preventDefault(); showPrivacy(); };
   const busy = async (msg, job) => {
-    const el = $('#g-busy'); document.querySelectorAll('.gate-opt').forEach(b => b.disabled = true);
+    const el = $('#g-busy'), err = $('#g-err'); if (err) err.hidden = true; document.querySelectorAll('.gate-opt, #g-open').forEach(b => b.disabled = true);
     el.hidden = false; el.textContent = msg;
-    try { const r = await job(); if (r) gChosen(r); else { el.hidden = true; document.querySelectorAll('.gate-opt').forEach(b => b.disabled = false); } }
-    catch (e) { el.hidden = true; document.querySelectorAll('.gate-opt').forEach(b => b.disabled = false); if (e.auth) return gLogin('', email); toast(errMsg(e)); }
+    const done = () => { el.hidden = true; document.querySelectorAll('.gate-opt, #g-open').forEach(b => b.disabled = false); };
+    try { const r = await job(); if (r) gChosen(r); else done(); }
+    catch (e) { done(); if (e.auth) return gLogin('', email); if (err) { err.textContent = errMsg(e); err.hidden = false; } else toast(errMsg(e)); }
   };
   on('g-pick', () => busy('正在打开你的 Google Drive…', async () => { const doc = await gPick(); if (!doc) return null; $('#g-busy').textContent = '正在读取账本…'; return gUse(doc); }));
   on('g-new', () => busy('正在建立账本…', gCreate));
+  // 贴上旧账本的链接：App 先试着直接打开；还没有权限的话，Google 的选择器只会列出这一个文件，按「选择」就好
+  on('g-open', () => {
+    const m = ($('#g-url').value || '').match(/\/spreadsheets\/d\/([\w-]{20,})/);
+    if (!m) { const e = $('#g-err'); e.textContent = '这不是 Google Sheet 的链接。请在电脑或手机打开你的记账 Sheet，复制网址贴在这里'; e.hidden = false; return; }
+    busy('正在打开账本…', async () => {
+      try { return await gUse({ id: m[1] }); }
+      catch (e) { if (e.auth || !/打不开这个/.test(e.message)) throw e; }
+      $('#g-busy').textContent = '请在 Google 的视窗按「选择」，允许 App 打开这个账本';
+      const doc = await gPick(m[1]); if (!doc) return null;
+      $('#g-busy').textContent = '正在读取账本…'; return gUse(doc);
+    });
+  });
+}
+// 隐私政策：在 App 里开一个小视窗（不跳走，免得在主屏幕 App 里回不来）
+function showPrivacy() {
+  const box = document.body.appendChild(Object.assign(document.createElement('div'), { className: 'pp-wrap' }));
+  box.innerHTML = `<div class="pp" role="dialog" aria-modal="true" aria-label="隐私政策"><div class="pp-top"><b>隐私政策</b><button class="pp-x" aria-label="关闭">✕</button></div>
+    <iframe src="privacy.html#${LANG === 'en' ? 'en' : 'zh'}" title="隐私政策"></iframe></div>`;
+  const close = () => { box.remove(); removeEventListener('keydown', esc); };
+  const esc = e => { if (e.key === 'Escape') close(); };
+  box.onclick = e => { if (e.target === box || e.target.closest('.pp-x')) close(); };
+  addEventListener('keydown', esc);
+  if (!calm()) box.querySelector('.pp').animate([{ opacity: 0, transform: 'translateY(12px) scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.2,.8,.2,1)' });
 }
 function gChosen(r) {
   ['ledger.cache', 'ledger.outbox', 'ledger.onboarded'].forEach(k => store.set(k, null));
@@ -3277,13 +3331,14 @@ function gSwitch() {
 }
 // Google 的文件选择器（只列出 Google Sheet）；选了哪个，App 才看得到哪个
 const loadJs = src => new Promise((ok, no) => document.head.appendChild(Object.assign(document.createElement('script'), { src, onload: ok, onerror: () => no(new Error('打不开 Google 的选择器，请检查网络')) })));
-async function gPick() {
+async function gPick(fileId) {
   const tok = gTok(); if (!tok) throw authErr();
   if (!(window.gapi && gapi.load)) await loadJs('https://apis.google.com/js/api.js');
   await new Promise((ok, no) => gapi.load('picker', { callback: ok, onerror: () => no(new Error('打不开 Google 的选择器，请检查网络')) }));
   const P = google.picker;
   return new Promise(resolve => {
     const view = new P.DocsView(P.ViewId.SPREADSHEETS).setMode(P.DocsViewMode.LIST);
+    if (fileId && view.setFileIds) view.setFileIds(fileId);   // 只列出贴上的那一个
     new P.PickerBuilder().addView(view).enableFeature(P.Feature.NAV_HIDDEN)
       .setOAuthToken(tok).setDeveloperKey(G.key).setAppId(G.app).setLocale(LANG === 'en' ? 'en' : 'zh-CN').setTitle(tr('选你原本记账的 Google Sheet'))
       .setCallback(d => {
@@ -3295,21 +3350,26 @@ async function gPick() {
 }
 async function gBack(r) {   // 刚从 Google 登录回来
   if (!r.ok) {
-    if (r.silent && CONN && CONN.id) return bootWeb(true);          // 悄悄续期不成：先显示手机里的资料
+    if (r.silent && CONN && (CONN.id || CONN.own)) return bootWeb(true);          // 悄悄续期不成：先显示手机里的资料
     if (r.error !== 'access_denied') toast('Google 登录没有成功，请再试一次');
-    return CONN && CONN.email ? showGate(CONN.id ? 'relogin' : 'pick') : showGate('welcome');
+    return CONN && CONN.email ? showGate(CONN.id || CONN.own ? 'relogin' : 'pick') : showGate('welcome');
   }
-  if (CONN && CONN.g && CONN.id) return bootWeb();
+  if (CONN && CONN.g && (CONN.id || CONN.own)) return bootWeb();
   $('#view').innerHTML = '<div class="status">正在登录…</div>';
   let email = '';
   try { email = (await gFetch('https://www.googleapis.com/oauth2/v3/userinfo')).email || ''; } catch {}
+  if (await isOwnerEmail(email)) {
+    ['ledger.cache', 'ledger.outbox'].forEach(k => store.set(k, null));
+    CONN = { g: 1, email, own: OWNER.exec, title: '' }; store.set('ledger.conn', CONN);
+    return bootWeb();
+  }
   CONN = { g: 1, email }; store.set('ledger.conn', CONN);
   showGate('pick');
 }
 function bootWeb(noSilent) {
   document.body.classList.remove('gate');
   if (!CONN) { renderHeader(); return showGate('welcome'); }
-  if (CONN.g && !CONN.id) return gTok() ? showGate('pick') : showGate('welcome');
+  if (CONN.g && !CONN.id && !CONN.own) return gTok() ? showGate('pick') : showGate('welcome');
   if (CONN.g && !gTok() && !noSilent && gCanSilent()) return gLogin('none', CONN.email);   // 通行证过期：先去 Google 续一下
   const c = store.get('ledger.cache');
   if (c && !S.loaded) { try { applyData(c); replayOutbox(); S.loaded = true; } catch {} }
